@@ -1,0 +1,2 @@
+# Legomark India Assets Directory
+# Place logos, SVG vector assets, and static images here.

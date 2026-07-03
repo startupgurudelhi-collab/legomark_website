@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+
+  /* Corporate Brand Color Palette */
+  --color-brand-primary-50: #f4f6fa;
+  --color-brand-primary-100: #e5eaf3;
+  --color-brand-primary-200: #c6d1e4;
+  --color-brand-primary-300: #98add0;
+  --color-brand-primary-400: #6281b6;
+  --color-brand-primary-500: #3c5d98;
+  --color-brand-primary-600: #2d487b;
+  --color-brand-primary-700: #253b65;
+  --color-brand-primary-800: #213254;
+  --color-brand-primary-900: #1b2641;
+  --color-brand-primary-950: #0f1526; /* Navy Blue */
+
+  --color-brand-secondary-50: #fff7ed;
+  --color-brand-secondary-100: #ffedd5;
+  --color-brand-secondary-200: #fed7aa;
+  --color-brand-secondary-300: #fdbb74;
+  --color-brand-secondary-400: #fb923c;
+  --color-brand-secondary-500: #f97316; /* Dark Orange */
+  --color-brand-secondary-600: #ea580c;
+  --color-brand-secondary-700: #c2410c;
+  --color-brand-secondary-800: #9a3412;
+  --color-brand-secondary-900: #7c2d12;
+  --color-brand-secondary-950: #431407;
+
+  /* Custom component definitions */
+  --shadow-brand: 0 4px 20px -2px rgba(15, 21, 38, 0.08), 0 2px 8px -1px rgba(15, 21, 38, 0.04);
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased selection:bg-brand-secondary-200 selection:text-brand-secondary-950;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight text-brand-primary-950;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-desktop {
+  display: flex;
+  width: max-content;
+  animation: marquee 25s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-mobile {
+  display: flex;
+  width: max-content;
+  animation: marquee 35s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-desktop:hover,
+.animate-marquee-mobile:hover {
+  animation-play-state: paused;
+}
+
+

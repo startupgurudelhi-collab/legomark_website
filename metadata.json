@@ -1,0 +1,6 @@
+{
+  "name": "Legomark India",
+  "description": "Enterprise Legal & Business Consultancy Platform Foundation for Legomark India (Efilingg)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
