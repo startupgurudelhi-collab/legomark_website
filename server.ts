@@ -13,10 +13,16 @@ import { createServer as createViteServer } from "vite";
 import apiRouter from "./server/routes/api.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { logger } from "./server/utils/logger.js";
+import { runMigrations, verifyConnection } from "./database/index.js";
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
+  // Serve simple health check
+  app.get("/health", (req, res) => {
+    res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
+  });
 
   // Basic parsing middlewares
   app.use(express.json({ limit: "150mb" }));
@@ -88,9 +94,49 @@ async function startServer() {
   // Global Error Handler (Must be registered last)
   app.use(errorHandler);
 
-  app.listen(PORT, "0.0.0.0", () => {
+  // Run database schema migrations prior to starting HTTP server
+  if (process.env.DATABASE_URL) {
+    logger.info("DATABASE_URL is provided. Verifying connection and executing migrations...");
+    let retries = 5;
+    let connected = false;
+    while (retries > 0 && !connected) {
+      connected = await verifyConnection();
+      if (!connected) {
+        retries--;
+        logger.warn(`Database connection failed. Retrying in 3 seconds... (${retries} attempts left)`);
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+      }
+    }
+    if (connected) {
+      await runMigrations();
+    } else {
+      logger.error("Could not verify database connection. Proceeding to boot server without migrations sync.");
+    }
+  } else {
+    logger.info("DATABASE_URL is not provided. Skipping database verification and migrations.");
+  }
+
+  const server = app.listen(PORT, "0.0.0.0", () => {
     logger.info(`🚀 Legomark India foundation server running on http://0.0.0.0:${PORT}`);
   });
+
+  // Graceful shutdown handler
+  const handleShutdown = (signal: string) => {
+    logger.info(`Received ${signal}. Gracefully stopping HTTP server...`);
+    server.close(() => {
+      logger.info("HTTP server closed. Exiting process.");
+      process.exit(0);
+    });
+
+    // Timeout-based fallback to guarantee exit
+    setTimeout(() => {
+      logger.error("Forced termination due to active connections remaining past timeout.");
+      process.exit(1);
+    }, 10000);
+  };
+
+  process.on("SIGTERM", () => handleShutdown("SIGTERM"));
+  process.on("SIGINT", () => handleShutdown("SIGINT"));
 }
 
 startServer().catch((err) => {
