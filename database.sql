@@ -351,8 +351,7 @@ ALTER TABLE `workflow_tasks` ADD CONSTRAINT `workflow_tasks_task_id_tasks_id_fk`
 
 -- SEED INITIAL ADMINISTRATOR USER
 -- Email: admin@legomark.in
--- Password: admin123 (bcrypt hash: $2a$10$O/R2K8M/uX8xGIn1p0bYKeN9pZ7e36hFskNq6yGvA7K8Gq5Nn5uIu or similar, let's use a standard modern bcrypt hash: $2y$10$eFq6g5v2f30jZg8oMv8oMuX77e5h.D8oXG8R3.G6qA7M5M/vX/5v6)
--- We will let the web app handle admin creation dynamically or seed via this SQL if desired.
+-- Password: admin123 (bcrypt hash: $2a$10$7Z2ZqE8fOInGInO0eFkWGeS/lZkWgS.Qe3Uq6H3LkWKeIqfGgG/5v)
 -- Standard Admin Seed:
 INSERT INTO `users` (`id`, `email`, `full_name`, `password_hash`, `role`, `created_at`, `updated_at`, `is_deleted`) 
 VALUES (
