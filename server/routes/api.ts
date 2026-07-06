@@ -11,11 +11,8 @@ import authRoutes from "./auth.js";
 import healthRoutes from "./health.js";
 import { requireAuth } from "../middleware/authMiddleware.js";
 
-// Ensure uploads directory exists
+// Uploads directory path
 const uploadDir = path.join(process.cwd(), "public/uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
 
 // Multer disk storage setup
 const storage = multer.diskStorage({
