@@ -398,7 +398,8 @@ export const CmsConfigController = {
 
   async updateLogos(req: Request, res: Response, next: NextFunction) {
     try {
-      const data = await CmsConfigService.updateLogos(req.body);
+      const list = req.body;
+      const data = await CmsConfigService.updateLogos(list);
       return sendSuccess(res, "Client logos saved successfully", data);
     } catch (err) {
       return sendError(res, err, "Failed to update client logos CMS");

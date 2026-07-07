@@ -1,0 +1,244 @@
+{
+  "homepageCmsDb": {
+    "heroTitle": "India's Smartest Legal & Company Filing Engine",
+    "heroSub": "Incorporate Private Limiteds, obtain GST registrations, secure trademarks, and execute annual tax returns with CA assisted automation.",
+    "heroBadge": "LEGAL MEETS SPEED",
+    "stat1Label": "Informed Startups",
+    "stat1Value": "25,000+",
+    "stat2Label": "Filing Accuracy",
+    "stat2Value": "99.9%",
+    "stat3Label": "Chartered Accountants",
+    "stat3Value": "150+",
+    "whyTitle": "Why Indian Founders Pick Legomark",
+    "whyDesc": "We eliminate bureaucratic bottlenecks. Enjoy real-time tracking, upfront transparent fees, and dedicated support from experienced corporate attorneys.",
+    "ctaTitle": "Ready to launch your Indian corporate entity?",
+    "ctaDesc": "Contact our dedicated legal experts today for a completely free strategy call.",
+    "ctaButtonText": "Incorporate Your Company"
+  },
+  "contactInfoDb": {
+    "phone": "+91 75308 47878",
+    "email": "info@legomarkindia.com",
+    "address": "D-561, Pocket 11, DDA Janta Flats, Jasola, New Delhi – 110025",
+    "workingHours": "Monday to Sunday: 11:00 AM - 8:00 PM",
+    "googleMapEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3504.6067341381145!2d77.28318357630444!3d28.551543375709564!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce3ee1d1d9145%3A0x600989f662be3ef!2sJasola%20Vihar%20Shaheen%20Bagh%20Metro%20Station!5e0!3m2!1sen!2sin!4v1719661500000",
+    "socialFb": "https://facebook.com/legomarkindia",
+    "socialTw": "https://twitter.com/legomarkindia",
+    "socialIn": "https://linkedin.com/company/legomarkindia",
+    "socialWa": "https://wa.me/917530847878"
+  },
+  "adminSettingsDb": {
+    "siteName": "Legomark India",
+    "seoMetaTitle": "Legomark India | Professional Company Registration & GST Filing Portal",
+    "seoMetaDescription": "Register your Private Limited, LLP, OPC, Trademark, and file tax returns online with expert corporate consultation.",
+    "smtpHost": "smtp.sendgrid.net",
+    "smtpPort": "587",
+    "smtpUser": "apikey",
+    "googleReviewsId": "ChIJRz_gXb0UrjsR2m0-LpP_A8o",
+    "whatsAppNumber": "+919876543210",
+    "razorpayKeyId": "rzp_live_vP3xyz321",
+    "calendlyLink": "https://calendly.com/legomark/15min"
+  },
+  "mediaDb": [
+    {
+      "id": "media-001",
+      "name": "logo_legomark_dark.png",
+      "folder": "brand",
+      "size": "48 KB",
+      "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=300&auto=format&fit=crop",
+      "type": "image",
+      "createdAt": "2026-06-01"
+    },
+    {
+      "id": "media-002",
+      "name": "founder_agreement_draft.pdf",
+      "folder": "documents/templates",
+      "size": "245 KB",
+      "url": "#",
+      "type": "document",
+      "createdAt": "2026-06-10"
+    },
+    {
+      "id": "media-003",
+      "name": "banner_service_gst.jpg",
+      "folder": "services",
+      "size": "180 KB",
+      "url": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=300&auto=format&fit=crop",
+      "type": "image",
+      "createdAt": "2026-06-15"
+    }
+  ],
+  "testimonialsDb": [
+    {
+      "id": "test-001",
+      "clientName": "Karan Johar",
+      "designation": "Director",
+      "company": "TechVeda Solutions",
+      "rating": 5,
+      "content": "Legomark India simplified our complete corporate incorporation under 8 days. Professional expertise and timely updates!",
+      "featured": true,
+      "sortOrder": 1,
+      "serviceUsed": "Company Registration",
+      "videoUrl": "/testimonials/video-1.mp4",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=400",
+      "status": "Published"
+    },
+    {
+      "id": "test-002",
+      "clientName": "Priyanka Sharma",
+      "designation": "Founder",
+      "company": "OrganicBasket",
+      "rating": 5,
+      "content": "Excellent experience securing our brand trademark. The process was entirely hands-off for us.",
+      "featured": true,
+      "sortOrder": 2,
+      "serviceUsed": "Trademark Protection",
+      "videoUrl": "/video-2.mp4",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=400",
+      "status": "Published"
+    },
+    {
+      "id": "test-003",
+      "clientName": "Vikram Rathore",
+      "designation": "Founder",
+      "company": "Rathore Logistics",
+      "rating": 5,
+      "content": "Prompt GST filing setup and voluntary registration support. Zero compliance delays!",
+      "featured": true,
+      "sortOrder": 3,
+      "serviceUsed": "GST Registration",
+      "videoUrl": "/video-3.mp4",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400",
+      "status": "Published"
+    },
+    {
+      "id": "test-004",
+      "clientName": "Amit Verma",
+      "designation": "CEO",
+      "company": "AgriGrowth Partners",
+      "rating": 5,
+      "content": "Flawless annual bookkeeping and regular corporate compliance. High accuracy and transparency.",
+      "featured": true,
+      "sortOrder": 4,
+      "serviceUsed": "Tax & Compliance",
+      "videoUrl": "/video-4.mp4",
+      "thumbnailUrl": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=400",
+      "status": "Published"
+    },
+    {
+      "id": "test-005",
+      "clientName": "Rohan Mehta",
+      "designation": "Co-Founder",
+      "company": "Playverse Studios",
+      "rating": 5,
+      "content": "Absolutely brilliant end-to-end support for company formation. Everything from DSC registration to MCA approval was managed flawlessly. The client portal is incredibly simple to use!",
+      "featured": true,
+      "sortOrder": 5,
+      "serviceUsed": "Company Registration",
+      "videoUrl": "",
+      "thumbnailUrl": "",
+      "status": "Published"
+    },
+    {
+      "id": "test-006",
+      "clientName": "Ananya Deshmukh",
+      "designation": "Founder",
+      "company": "Zenith Legal Advisory",
+      "rating": 5,
+      "content": "Transitioning our company's accounting and quarterly GST returns to Legomark is the best operational decision we made. Professional, prompt, and highly knowledgeable accountants.",
+      "featured": true,
+      "sortOrder": 6,
+      "serviceUsed": "GST Filing",
+      "videoUrl": "",
+      "thumbnailUrl": "",
+      "status": "Published"
+    },
+    {
+      "id": "test-007",
+      "clientName": "Sameer Sengupta",
+      "designation": "CEO",
+      "company": "Eastern LogiTech",
+      "rating": 5,
+      "content": "Trademark filing can be quite stressful, but their lawyers handled the class search and trademark objection reply with absolute precision. Our brand logo is now registered!",
+      "featured": true,
+      "sortOrder": 7,
+      "serviceUsed": "Trademark Registration",
+      "videoUrl": "",
+      "thumbnailUrl": "",
+      "status": "Published"
+    },
+    {
+      "id": "test-008",
+      "clientName": "Meera Nair",
+      "designation": "Founder",
+      "company": "Heritage Foods",
+      "rating": 5,
+      "content": "Legomark made securing our FSSAI central license and MSME certificate extremely swift. Outstanding support, clear pricing, and continuous updates over WhatsApp!",
+      "featured": true,
+      "sortOrder": 8,
+      "serviceUsed": "FSSAI & Business License",
+      "videoUrl": "",
+      "thumbnailUrl": "",
+      "status": "Published"
+    },
+    {
+      "id": "test-009",
+      "clientName": "Rajesh Patel",
+      "designation": "Director",
+      "company": "Patel Pharma",
+      "rating": 5,
+      "content": "Their compliance automation is stellar. Director's KYC, annual board resolutions, and tax returns were completed well before deadlines. Excellent value!",
+      "featured": true,
+      "sortOrder": 9,
+      "serviceUsed": "Annual Compliance",
+      "videoUrl": "",
+      "thumbnailUrl": "",
+      "status": "Published"
+    },
+    {
+      "id": "test-010",
+      "clientName": "Sunita Rao",
+      "designation": "Founder",
+      "company": "Aura Organics",
+      "rating": 5,
+      "content": "Very satisfied with the speed and efficiency. We got our Private Limited incorporation documents in less than 9 days. Highly cooperative and humble consultants.",
+      "featured": true,
+      "sortOrder": 10,
+      "serviceUsed": "Company Registration",
+      "videoUrl": "",
+      "thumbnailUrl": "",
+      "status": "Published"
+    }
+  ],
+  "logosDb": [
+    {
+      "id": "logo-001",
+      "clientName": "Acme Corp New",
+      "imageUrl": "https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=150&auto=format&fit=crop",
+      "sortOrder": 1,
+      "status": "Active"
+    },
+    {
+      "id": "logo-002",
+      "clientName": "Venture Partners New",
+      "imageUrl": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=150&auto=format&fit=crop",
+      "sortOrder": 2,
+      "status": "Active"
+    }
+  ],
+  "faqsDb": [
+    {
+      "id": "faq-001",
+      "question": "What is a Digital Signature Certificate (DSC)?",
+      "answer": "A DSC is an electronic signature format issued by certified authorities. It is mandatory for filing company incorporation documents securely on the MCA portal.",
+      "category": "General Filing",
+      "sortOrder": 1
+    },
+    {
+      "id": "faq-002",
+      "question": "Do I need a commercial office to register a company?",
+      "answer": "No. You can use any valid residential address as the registered office of your company in India. A utility bill (not older than 2 months) with NOC is required.",
+      "category": "Registration",
+      "sortOrder": 2
+    }
+  ]
+}
