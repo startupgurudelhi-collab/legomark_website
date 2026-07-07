@@ -504,6 +504,10 @@ export const CmsConfigService = {
     return { homepage, contact, settings, media, testimonials, logos, faqs };
   },
 
+  async getTestimonialsOnly() {
+    return CmsConfigRepository.getTestimonials();
+  },
+
   async updateHomepage(updates: any) {
     logger.info(`[Automation] Static homepage layouts updated.`);
     return CmsConfigRepository.updateHomepage(updates);

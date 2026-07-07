@@ -351,6 +351,15 @@ export const CmsConfigController = {
     }
   },
 
+  async getTestimonials(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await CmsConfigService.getTestimonialsOnly();
+      return sendSuccess(res, "Testimonials loaded successfully", data);
+    } catch (err) {
+      return sendError(res, err, "Failed to retrieve testimonials");
+    }
+  },
+
   async updateHomepage(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await CmsConfigService.updateHomepage(req.body);

@@ -42,6 +42,7 @@ import {
   Quote
 } from "lucide-react";
 import { useToast } from "../contexts/ToastContext.js";
+import { initialTestimonials } from "../data/adminStore.js";
 import { useBrandMedia } from "../hooks/useBrandMedia.js";
 import { useBooking } from "../hooks/useBooking.js";
 import { Button } from "../components/Button.js";
@@ -203,206 +204,7 @@ const packages = [
   },
 ];
 
-const videoTestimonials = [
-  {
-    id: 1,
-    name: "Karan Johar",
-    company: "TechVeda Solutions",
-    service: "Company Registration",
-    location: "Bengaluru",
-    duration: "1:42",
-    videoUrl: "/testimonials/video-1.mp4",
-    thumbnailGradient: "from-blue-600/20 to-brand-primary-900/40",
-  },
-  {
-    id: 2,
-    name: "Priyanka Sharma",
-    company: "OrganicBasket",
-    service: "Trademark Protection",
-    location: "Mumbai",
-    duration: "2:15",
-    videoUrl: "/video-2.mp4",
-    thumbnailGradient: "from-amber-600/20 to-brand-primary-900/40",
-  },
-  {
-    id: 3,
-    name: "Vikram Rathore",
-    company: "Rathore Logistics",
-    service: "GST Registration",
-    location: "New Delhi",
-    duration: "1:58",
-    videoUrl: "/video-3.mp4",
-    thumbnailGradient: "from-emerald-600/20 to-brand-primary-900/40",
-  },
-  {
-    id: 4,
-    name: "Amit Verma",
-    company: "AgriGrowth Partners",
-    service: "Tax & Compliance",
-    location: "Hyderabad",
-    duration: "2:30",
-    videoUrl: "/video-4.mp4",
-    thumbnailGradient: "from-purple-600/20 to-brand-primary-900/40",
-  },
-  // 4 empty placeholders ready for future uploads
-  {
-    id: 5,
-    name: "",
-    company: "",
-    service: "",
-    location: "",
-    duration: "",
-    videoUrl: "/video-5.mp4",
-    thumbnailGradient: "from-slate-100 to-slate-200",
-    isPlaceholder: true,
-  },
-  {
-    id: 6,
-    name: "",
-    company: "",
-    service: "",
-    location: "",
-    duration: "",
-    videoUrl: "/video-6.mp4",
-    thumbnailGradient: "from-slate-100 to-slate-200",
-    isPlaceholder: true,
-  },
-  {
-    id: 7,
-    name: "",
-    company: "",
-    service: "",
-    location: "",
-    duration: "",
-    videoUrl: "/video-7.mp4",
-    thumbnailGradient: "from-slate-100 to-slate-200",
-    isPlaceholder: true,
-  },
-  {
-    id: 8,
-    name: "",
-    company: "",
-    service: "",
-    location: "",
-    duration: "",
-    videoUrl: "/video-8.mp4",
-    thumbnailGradient: "from-slate-100 to-slate-200",
-    isPlaceholder: true,
-  },
-];
-
-const textTestimonials = [
-  {
-    stars: 5,
-    content: "Absolutely brilliant end-to-end support for company formation. Everything from DSC registration to MCA approval was managed flawlessly. The client portal is incredibly simple to use!",
-    name: "Rohan Mehta",
-    company: "Playverse Studios",
-    service: "Company Registration",
-    location: "Mumbai",
-    date: "June 15, 2026",
-  },
-  {
-    stars: 5,
-    content: "Transitioning our company's accounting and quarterly GST returns to Legomark is the best operational decision we made. Professional, prompt, and highly knowledgeable accountants.",
-    name: "Ananya Deshmukh",
-    company: "Zenith Legal Advisory",
-    service: "GST Filing",
-    location: "Pune",
-    date: "May 28, 2026",
-  },
-  {
-    stars: 5,
-    content: "Trademark filing can be quite stressful, but their lawyers handled the class search and trademark objection reply with absolute precision. Our brand logo is now registered!",
-    name: "Sameer Sengupta",
-    company: "Eastern LogiTech",
-    service: "Trademark Registration",
-    location: "Kolkata",
-    date: "April 10, 2026",
-  },
-  {
-    stars: 5,
-    content: "Legomark made securing our FSSAI central license and MSME certificate extremely swift. Outstanding support, clear pricing, and continuous updates over WhatsApp!",
-    name: "Meera Nair",
-    company: "Heritage Foods",
-    service: "FSSAI & Business License",
-    location: "Kochi",
-    date: "May 04, 2026",
-  },
-  {
-    stars: 5,
-    content: "Their compliance automation is stellar. Director's KYC, annual board resolutions, and tax returns were completed well before deadlines. Excellent value!",
-    name: "Rajesh Patel",
-    company: "Patel Pharma",
-    service: "Annual Compliance",
-    location: "Ahmedabad",
-    date: "June 20, 2026",
-  },
-  {
-    stars: 5,
-    content: "Very satisfied with the speed and efficiency. We got our Private Limited incorporation documents in less than 9 days. Highly cooperative and humble consultants.",
-    name: "Sunita Rao",
-    company: "Aura Organics",
-    service: "Company Registration",
-    location: "Bengaluru",
-    date: "March 12, 2026",
-  },
-  {
-    stars: 5,
-    content: "Superb tax planning and corporate filing services. Their advisors explained every deduction clearly and filed our business ITR securely. Completely transparent fee model.",
-    name: "Amit Singhal",
-    company: "Singhal & Co",
-    service: "Tax & Compliance",
-    location: "New Delhi",
-    date: "February 22, 2026",
-  },
-  {
-    stars: 5,
-    content: "Needed our IEC code on short notice for an import batch. Legomark processed our application and delivered the certificate within 24 hours. Phenomenal speed!",
-    name: "Priya Balakrishnan",
-    company: "Balakrishnan Textiles",
-    service: "Import Export Code",
-    location: "Chennai",
-    date: "April 18, 2026",
-  },
-  {
-    stars: 5,
-    content: "Seamless experience registering our Limited Liability Partnership. Excellent communication throughout the drafting and submission process. Highly recommend their corporate team.",
-    name: "Divya Aggarwal",
-    company: "Nexa Design Labs",
-    service: "LLP Registration",
-    location: "Gurgaon",
-    date: "January 15, 2026",
-  },
-  {
-    stars: 5,
-    content: "Their online portal made uploading KYC papers extremely quick. Our GSTIN was approved in just 3 days with zero hassle. Professional execution at every stage!",
-    name: "Vikram Malhotra",
-    company: "Apex Builders",
-    service: "GST Registration",
-    location: "Noida",
-    date: "May 19, 2026",
-  },
-  {
-    stars: 5,
-    content: "Legomark's attorney did a comprehensive trademark availability search and handled the complete filing process. Very reliable legal advisory portal!",
-    name: "Neha Kapoor",
-    company: "Kapoor Artistry",
-    service: "Trademark Protection",
-    location: "Jaipur",
-    date: "June 01, 2026",
-  },
-  {
-    stars: 5,
-    content: "Got my MSME registration and trade licenses sorted in a jiffy. Very responsive customer support and client-friendly pricing structure. Will definitely use again.",
-    name: "Santosh Yadav",
-    company: "Yadav Agro Farms",
-    service: "MSME/Udyam",
-    location: "Patna",
-    date: "June 10, 2026",
-  },
-];
-
-const testimonials = textTestimonials;
+// Testimonial CMS values are fetched dynamically from the backend and initialized using the admin store default list.
 
 const faqs = [
   {
@@ -490,30 +292,54 @@ export default function HomePage() {
   const [activeVideoTitle, setActiveVideoTitle] = useState<string | null>(null);
   const [textCarouselIndex, setTextCarouselIndex] = useState(0);
   const [logosList, setLogosList] = useState<any[]>([]);
+  const [dynamicTestimonials, setDynamicTestimonials] = useState<any[]>(initialTestimonials);
 
-  // Load client logos from CMS on mount
+  // Load client logos and testimonials from CMS on mount
   useEffect(() => {
     fetch("/api/cms/config")
       .then(res => res.json())
       .then(res => {
-        if (res.success && res.data && res.data.logos) {
-          setLogosList(res.data.logos.filter((l: any) => l.status !== "Inactive"));
+        if (res.success && res.data) {
+          if (res.data.logos) {
+            setLogosList(res.data.logos.filter((l: any) => l.status !== "Inactive"));
+          }
+          if (res.data.testimonials) {
+            setDynamicTestimonials(res.data.testimonials);
+          }
         }
       })
-      .catch(err => console.error("Failed to load CMS logos on homepage", err));
+      .catch(err => console.error("Failed to load CMS config on homepage", err));
   }, []);
 
+  const videoTestimonials = dynamicTestimonials.filter(t => t.videoUrl && t.videoUrl.trim() !== "" && t.status !== "Draft");
+  const textTestimonials = dynamicTestimonials.filter(t => (!t.videoUrl || t.videoUrl.trim() === "") && t.status !== "Draft");
+
+  const videoDisplayList = [...videoTestimonials];
+  if (videoDisplayList.length < 4) {
+    const needed = 4 - videoDisplayList.length;
+    for (let i = 0; i < needed; i++) {
+      videoDisplayList.push({
+        id: `placeholder-${i}`,
+        isPlaceholder: true
+      });
+    }
+  }
+
   const handleNextText = () => {
+    if (textTestimonials.length === 0) return;
     setTextCarouselIndex((prev) => (prev + 1) % textTestimonials.length);
   };
 
   const handlePrevText = () => {
+    if (textTestimonials.length === 0) return;
     setTextCarouselIndex((prev) => (prev - 1 + textTestimonials.length) % textTestimonials.length);
   };
 
   const getVisibleCards = () => {
+    if (textTestimonials.length === 0) return [];
     const cards = [];
-    for (let i = 0; i < 3; i++) {
+    const limit = Math.min(3, textTestimonials.length);
+    for (let i = 0; i < limit; i++) {
       cards.push(textTestimonials[(textCarouselIndex + i) % textTestimonials.length]);
     }
     return cards;
@@ -817,11 +643,13 @@ export default function HomePage() {
   };
 
   const nextTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    if (textTestimonials.length === 0) return;
+    setCurrentTestimonial((prev) => (prev + 1) % textTestimonials.length);
   };
 
   const prevTestimonial = () => {
-    setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+    if (textTestimonials.length === 0) return;
+    setCurrentTestimonial((prev) => (prev - 1 + textTestimonials.length) % textTestimonials.length);
   };
 
   return (
@@ -1561,12 +1389,12 @@ export default function HomePage() {
                 <p className="text-xs text-slate-500">Watch founders share their digital transformation story.</p>
               </div>
               <span className="text-xs font-mono font-bold text-slate-400 uppercase tracking-widest px-2.5 py-1 bg-white border border-slate-200 rounded-md">
-                4 Active • 4 Pending
+                {videoTestimonials.length} Active • {Math.max(0, 4 - videoTestimonials.length)} Pending
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {videoTestimonials.map((video) => {
+              {videoDisplayList.map((video) => {
                 if (video.isPlaceholder) {
                   return (
                     <div
@@ -1587,29 +1415,35 @@ export default function HomePage() {
                     key={video.id}
                     className="group relative bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col h-full"
                     onClick={() => {
-                      setActiveVideoUrl(video.videoUrl);
-                      setActiveVideoTitle(`${video.name} - ${video.company}`);
+                      setActiveVideoUrl(video.videoUrl || "");
+                      setActiveVideoTitle(`${video.clientName || "Client"} - ${video.company || "Company"}`);
                     }}
                   >
-                    <div className={`relative aspect-video w-full bg-gradient-to-tr ${video.thumbnailGradient} flex items-center justify-center overflow-hidden`}>
+                    <div className="relative aspect-video w-full flex items-center justify-center overflow-hidden bg-slate-900">
+                      {video.thumbnailUrl ? (
+                        <img
+                          src={video.thumbnailUrl}
+                          alt={`${video.clientName || "Client"}'s video story`}
+                          className="absolute inset-0 w-full h-full object-cover opacity-85 transition-transform duration-300 group-hover:scale-105"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-tr from-brand-primary-900/40 to-brand-secondary-900/20 opacity-80" />
+                      )}
                       <div className="absolute inset-0 bg-slate-950/20" />
                       
                       <div className="h-12 w-12 rounded-full bg-white/95 text-brand-primary-950 flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 z-10">
                         <Play className="h-5 w-5 fill-current ml-0.5 text-brand-secondary-600" />
                       </div>
-
-                      <span className="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-1.5 py-0.5 rounded font-bold">
-                        {video.duration}
-                      </span>
                     </div>
 
                     <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                       <div>
                         <span className="text-[10px] font-bold font-mono text-orange-600 bg-orange-50 px-2 py-0.5 rounded uppercase tracking-wider">
-                          {video.service}
+                          {video.serviceUsed || "Company registration"}
                         </span>
                         <h5 className="font-display font-bold text-slate-900 text-sm mt-2 leading-tight">
-                          {video.name}
+                          {video.clientName}
                         </h5>
                         <p className="text-xs text-slate-500 font-medium">
                           {video.company}
@@ -1617,7 +1451,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[10px] text-slate-400 font-mono font-medium">
-                        <span>{video.location}</span>
+                        <span>{video.designation || "Director"}</span>
                         <span className="text-brand-secondary-600 font-bold group-hover:underline flex items-center gap-0.5">
                           Watch story <ArrowRight className="h-2.5 w-2.5" />
                         </span>
@@ -1663,12 +1497,12 @@ export default function HomePage() {
                 
                 return (
                   <div
-                    key={index}
+                    key={review.id || index}
                     className={`${displayClass} bg-white border border-slate-200/80 rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all duration-300 relative flex flex-col h-full justify-between`}
                   >
                     <div className="space-y-4">
                       <div className="flex items-center gap-0.5 text-orange-500">
-                        {Array.from({ length: review.stars }).map((_, i) => (
+                        {Array.from({ length: review.rating || review.stars || 5 }).map((_, i) => (
                           <Star key={i} className="h-4 w-4 fill-current" />
                         ))}
                       </div>
@@ -1680,22 +1514,32 @@ export default function HomePage() {
 
                     <div className="border-t border-slate-150 pt-4 mt-6 flex flex-col gap-2">
                       <div className="flex items-start justify-between">
-                        <div>
-                          <h5 className="font-display font-bold text-slate-900 text-sm">
-                            {review.name}
-                          </h5>
-                          <p className="text-[11px] text-slate-500">
-                            {review.company}
-                          </p>
+                        <div className="flex items-center gap-3">
+                          {review.thumbnailUrl && (
+                            <img
+                              src={review.thumbnailUrl}
+                              alt={review.clientName || review.name}
+                              className="h-10 w-10 rounded-full object-cover border border-slate-100 shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                          )}
+                          <div>
+                            <h5 className="font-display font-bold text-slate-900 text-sm">
+                              {review.clientName || review.name}
+                            </h5>
+                            <p className="text-[11px] text-slate-500">
+                              {review.company}
+                            </p>
+                          </div>
                         </div>
                         <span className="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest bg-slate-100 py-0.5 px-2 rounded-full shrink-0">
-                          {review.location}
+                          {review.designation || review.location || "Founder"}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono mt-1">
-                        <span className="text-brand-secondary-600 font-bold">{review.service}</span>
-                        <span>{review.date}</span>
+                        <span className="text-brand-secondary-600 font-bold">{review.serviceUsed || review.service || "Consultancy"}</span>
+                        <span>{review.date || "Verified Client"}</span>
                       </div>
                     </div>
                   </div>

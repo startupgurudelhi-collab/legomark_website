@@ -104,6 +104,7 @@ router.post("/support/tickets/:id/reply", requireAuth, SupportController.reply);
 
 // System Settings & CMS Elements
 router.get("/cms/config", CmsConfigController.get);
+router.get("/cms/testimonials", CmsConfigController.getTestimonials);
 router.put("/cms/homepage", requireAuth, CmsConfigController.updateHomepage);
 router.put("/cms/contact", requireAuth, CmsConfigController.updateContact);
 router.put("/cms/settings", requireAuth, CmsConfigController.updateSettings);
