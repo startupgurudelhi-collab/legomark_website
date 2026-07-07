@@ -418,24 +418,6 @@ export const NotificationsRepository = {
 // ==========================================
 const CMS_PERSIST_FILE = path.join(process.cwd(), "database", "cms_persistence.json");
 
-// Helper to save current CMS data to JSON file
-function saveCmsPersistence() {
-  try {
-    const dataToSave = {
-      homepageCmsDb: store.homepageCmsDb,
-      contactInfoDb: store.contactInfoDb,
-      adminSettingsDb: store.adminSettingsDb,
-      mediaDb: store.mediaDb,
-      testimonialsDb: store.testimonialsDb,
-      logosDb: store.logosDb,
-      faqsDb: store.faqsDb
-    };
-    fs.writeFileSync(CMS_PERSIST_FILE, JSON.stringify(dataToSave, null, 2), "utf8");
-  } catch (err) {
-    console.error("Failed to write CMS persistence file:", err);
-  }
-}
-
 // Helper to load CMS data from JSON file on initialization
 function loadCmsPersistence() {
   try {
@@ -443,9 +425,24 @@ function loadCmsPersistence() {
       const fileContent = fs.readFileSync(CMS_PERSIST_FILE, "utf8");
       if (fileContent.trim()) {
         const data = JSON.parse(fileContent);
-        if (data.homepageCmsDb) Object.assign(store.homepageCmsDb, data.homepageCmsDb);
-        if (data.contactInfoDb) Object.assign(store.contactInfoDb, data.contactInfoDb);
-        if (data.adminSettingsDb) Object.assign(store.adminSettingsDb, data.adminSettingsDb);
+        if (data.homepageCmsDb) {
+          for (const key in store.homepageCmsDb) {
+            delete (store.homepageCmsDb as any)[key];
+          }
+          Object.assign(store.homepageCmsDb, data.homepageCmsDb);
+        }
+        if (data.contactInfoDb) {
+          for (const key in store.contactInfoDb) {
+            delete (store.contactInfoDb as any)[key];
+          }
+          Object.assign(store.contactInfoDb, data.contactInfoDb);
+        }
+        if (data.adminSettingsDb) {
+          for (const key in store.adminSettingsDb) {
+            delete (store.adminSettingsDb as any)[key];
+          }
+          Object.assign(store.adminSettingsDb, data.adminSettingsDb);
+        }
         if (data.mediaDb) {
           store.mediaDb.length = 0;
           store.mediaDb.push(...data.mediaDb);
@@ -469,67 +466,125 @@ function loadCmsPersistence() {
   }
 }
 
+// Helper to merge and save only a specific CMS section
+function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
+  try {
+    // 1. Ensure in-memory store has the latest persistent data
+    loadCmsPersistence();
+
+    // 2. Update the specific section in-memory
+    if (sectionKey === "homepageCmsDb") {
+      for (const key in store.homepageCmsDb) {
+        delete (store.homepageCmsDb as any)[key];
+      }
+      Object.assign(store.homepageCmsDb, sectionData);
+    } else if (sectionKey === "contactInfoDb") {
+      for (const key in store.contactInfoDb) {
+        delete (store.contactInfoDb as any)[key];
+      }
+      Object.assign(store.contactInfoDb, sectionData);
+    } else if (sectionKey === "adminSettingsDb") {
+      for (const key in store.adminSettingsDb) {
+        delete (store.adminSettingsDb as any)[key];
+      }
+      Object.assign(store.adminSettingsDb, sectionData);
+    } else if (sectionKey === "mediaDb") {
+      store.mediaDb.length = 0;
+      store.mediaDb.push(...sectionData);
+    } else if (sectionKey === "testimonialsDb") {
+      store.testimonialsDb.length = 0;
+      store.testimonialsDb.push(...sectionData);
+    } else if (sectionKey === "logosDb") {
+      store.logosDb.length = 0;
+      store.logosDb.push(...sectionData);
+    } else if (sectionKey === "faqsDb") {
+      store.faqsDb.length = 0;
+      store.faqsDb.push(...sectionData);
+    }
+
+    // 3. Prepare the full data payload to write to disk
+    const dataToSave = {
+      homepageCmsDb: store.homepageCmsDb,
+      contactInfoDb: store.contactInfoDb,
+      adminSettingsDb: store.adminSettingsDb,
+      mediaDb: store.mediaDb,
+      testimonialsDb: store.testimonialsDb,
+      logosDb: store.logosDb,
+      faqsDb: store.faqsDb
+    };
+
+    // 4. Ensure directory exists and write atomically synchronously
+    const dir = path.dirname(CMS_PERSIST_FILE);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(CMS_PERSIST_FILE, JSON.stringify(dataToSave, null, 2), "utf8");
+
+  } catch (err) {
+    console.error(`Failed to merge and save CMS section ${sectionKey}:`, err);
+  }
+}
+
 // Automatically load on initialization of this repository module
 loadCmsPersistence();
 
 export const CmsConfigRepository = {
   async getHomepage() {
+    loadCmsPersistence();
     return store.homepageCmsDb;
   },
   async updateHomepage(updates: any) {
-    Object.assign(store.homepageCmsDb, updates);
-    saveCmsPersistence();
+    mergeCmsSectionAndSave("homepageCmsDb", updates);
     return store.homepageCmsDb;
   },
   async getContact() {
+    loadCmsPersistence();
     return store.contactInfoDb;
   },
   async updateContact(updates: any) {
-    Object.assign(store.contactInfoDb, updates);
-    saveCmsPersistence();
+    mergeCmsSectionAndSave("contactInfoDb", updates);
     return store.contactInfoDb;
   },
   async getSettings() {
+    loadCmsPersistence();
     return store.adminSettingsDb;
   },
   async updateSettings(updates: any) {
-    Object.assign(store.adminSettingsDb, updates);
-    saveCmsPersistence();
+    mergeCmsSectionAndSave("adminSettingsDb", updates);
     return store.adminSettingsDb;
   },
   async getMedia() {
+    loadCmsPersistence();
     return store.mediaDb;
   },
   async addMedia(file: any) {
-    store.mediaDb.push(file);
-    saveCmsPersistence();
+    loadCmsPersistence();
+    const updatedMedia = [...store.mediaDb, file];
+    mergeCmsSectionAndSave("mediaDb", updatedMedia);
     return file;
   },
   async getTestimonials() {
+    loadCmsPersistence();
     return store.testimonialsDb;
   },
   async updateTestimonials(list: any[]) {
-    store.testimonialsDb.length = 0;
-    store.testimonialsDb.push(...list);
-    saveCmsPersistence();
+    mergeCmsSectionAndSave("testimonialsDb", list);
     return store.testimonialsDb;
   },
   async getLogos() {
+    loadCmsPersistence();
     return store.logosDb;
   },
   async updateLogos(list: any[]) {
-    store.logosDb.length = 0;
-    store.logosDb.push(...list);
-    saveCmsPersistence();
+    mergeCmsSectionAndSave("logosDb", list);
     return store.logosDb;
   },
   async getFaqs() {
+    loadCmsPersistence();
     return store.faqsDb;
   },
   async updateFaqs(list: any[]) {
-    store.faqsDb.length = 0;
-    store.faqsDb.push(...list);
-    saveCmsPersistence();
+    mergeCmsSectionAndSave("faqsDb", list);
     return store.faqsDb;
   }
 };
