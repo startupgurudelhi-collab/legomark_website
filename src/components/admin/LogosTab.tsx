@@ -21,7 +21,8 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
 
   // Form state
   const [clientName, setClientName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [uploadedImage, setUploadedImage] = useState("");
+  const [cdnUrl, setCdnUrl] = useState("");
   const [sortOrder, setSortOrder] = useState(1);
   const [status, setStatus] = useState<"Active" | "Inactive">("Active");
 
@@ -31,21 +32,41 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
   const handleSelect = (logo: AdminClientLogo) => {
     setSelectedLogo(logo);
     setClientName(logo.clientName);
-    setImageUrl(logo.imageUrl);
+    if (logo.imageUrl?.startsWith("data:")) {
+      setUploadedImage(logo.imageUrl);
+      setCdnUrl("");
+    } else {
+      setUploadedImage("");
+      setCdnUrl(logo.imageUrl || "");
+    }
     setSortOrder(logo.sortOrder);
     setStatus(logo.status);
   };
 
   const handleSave = () => {
-    if (!clientName.trim() || !imageUrl.trim()) {
-      toast.warn("Please provide a partner name and valid image URL.", "Missing Info");
+    let finalImageUrl = "";
+    if (uploadedImage) {
+      finalImageUrl = uploadedImage;
+    } else if (cdnUrl.trim()) {
+      finalImageUrl = cdnUrl.trim();
+    } else if (selectedLogo) {
+      finalImageUrl = selectedLogo.imageUrl;
+    }
+
+    if (!clientName.trim()) {
+      toast.warn("Please provide a partner name.", "Missing Info");
+      return;
+    }
+
+    if (!finalImageUrl) {
+      toast.warn("Please upload an image or provide a valid CDN URL.", "Missing Image");
       return;
     }
 
     if (selectedLogo) {
       const updated = logos.map((l) => {
         if (l.id === selectedLogo.id) {
-          return { ...l, clientName, imageUrl, sortOrder, status };
+          return { ...l, clientName, imageUrl: finalImageUrl, sortOrder, status };
         }
         return l;
       });
@@ -55,7 +76,7 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
       const newLogo: AdminClientLogo = {
         id: `logo-${Date.now()}`,
         clientName,
-        imageUrl,
+        imageUrl: finalImageUrl,
         sortOrder,
         status
       };
@@ -84,7 +105,8 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
   const handleClear = () => {
     setSelectedLogo(null);
     setClientName("");
-    setImageUrl("");
+    setUploadedImage("");
+    setCdnUrl("");
     setSortOrder(1);
     setStatus("Active");
   };
@@ -122,7 +144,8 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
-        setImageUrl(reader.result);
+        setUploadedImage(reader.result);
+        setCdnUrl("");
         
         // Clean up the filename to use as default clientName if empty
         if (!clientName.trim()) {
@@ -252,10 +275,10 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
               isDragging ? "bg-brand-primary-50 border-brand-primary-500" : "bg-slate-50/50 border-slate-200 hover:bg-slate-50"
             }`}
           >
-            {imageUrl ? (
+            {uploadedImage || cdnUrl || (selectedLogo ? selectedLogo.imageUrl : "") ? (
               <div className="space-y-2">
                 <img
-                  src={imageUrl}
+                  src={uploadedImage || cdnUrl || (selectedLogo ? selectedLogo.imageUrl : "")}
                   alt="Selected Preview"
                   className="max-h-20 object-contain mx-auto mix-blend-multiply"
                   referrerPolicy="no-referrer"
@@ -281,10 +304,15 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
             />
 
             <Input
-              label="Vector Image CDN URL *"
+              label="Vector Image CDN URL"
               placeholder="e.g. https://images.unsplash.com/..."
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
+              value={cdnUrl}
+              onChange={(e) => {
+                setCdnUrl(e.target.value);
+                if (e.target.value) {
+                  setUploadedImage("");
+                }
+              }}
               id="logo-img-url"
             />
 
