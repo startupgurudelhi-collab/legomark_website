@@ -1585,27 +1585,29 @@ export default function HomePage() {
                 TRUSTED BY CORPORATE BRANDS &amp; SME ALLIANCES
               </p>
               
-              <div className="relative w-full overflow-hidden" id="client-logos-marquee-wrapper">
-                {/* Desktop and Tablet Marquee */}
-                <div className="hidden sm:flex w-max animate-marquee-desktop">
+              <div 
+                className="relative w-full overflow-hidden flex flex-nowrap items-center whitespace-nowrap" 
+                id="client-logos-marquee-wrapper"
+              >
+                <div className="flex flex-nowrap items-center w-max animate-marquee">
                   {/* Group 1 */}
-                  <div className="flex items-center gap-16 shrink-0 pr-16">
+                  <div className="flex flex-nowrap items-center gap-10 md:gap-16 shrink-0 pr-10 md:pr-16">
                     {repeated.map((logo, idx) => (
                       <div
                         key={`g1-${logo.id || idx}-${idx}`}
-                        className="flex items-center justify-center h-24 md:h-32 px-4 transition-all duration-300 hover:scale-105"
+                        className="flex items-center justify-center h-20 md:h-28 px-4 transition-all duration-300 hover:scale-105 shrink-0"
                         style={{ transform: "none" }}
                       >
                         {logo.imageUrl ? (
                           <img
                             src={optimizeLogoUrl(logo.imageUrl)}
                             alt={logo.clientName}
-                            className="h-[75%] md:h-[80%] max-w-[280px] md:max-w-[360px] object-contain select-none"
+                            className="h-[75%] md:h-[80%] max-w-[200px] md:max-w-[320px] object-contain select-none"
                             style={{ transform: "none" }}
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <span className="text-xl md:text-2xl font-display font-extrabold text-slate-500 tracking-tight transition-colors duration-300 hover:text-brand-primary-950">
+                          <span className="text-lg md:text-2xl font-display font-extrabold text-slate-500 tracking-tight transition-colors duration-300 hover:text-brand-primary-950">
                             {logo.clientName}
                           </span>
                         )}
@@ -1613,75 +1615,23 @@ export default function HomePage() {
                     ))}
                   </div>
                   {/* Group 2 */}
-                  <div className="flex items-center gap-16 shrink-0 pr-16" aria-hidden="true">
+                  <div className="flex flex-nowrap items-center gap-10 md:gap-16 shrink-0 pr-10 md:pr-16" aria-hidden="true">
                     {repeated.map((logo, idx) => (
                       <div
                         key={`g2-${logo.id || idx}-${idx}`}
-                        className="flex items-center justify-center h-24 md:h-32 px-4 transition-all duration-300 hover:scale-105"
+                        className="flex items-center justify-center h-20 md:h-28 px-4 transition-all duration-300 hover:scale-105 shrink-0"
                         style={{ transform: "none" }}
                       >
                         {logo.imageUrl ? (
                           <img
                             src={optimizeLogoUrl(logo.imageUrl)}
                             alt={logo.clientName}
-                            className="h-[75%] md:h-[80%] max-w-[280px] md:max-w-[360px] object-contain select-none"
+                            className="h-[75%] md:h-[80%] max-w-[200px] md:max-w-[320px] object-contain select-none"
                             style={{ transform: "none" }}
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <span className="text-xl md:text-2xl font-display font-extrabold text-slate-500 tracking-tight transition-colors duration-300 hover:text-brand-primary-950">
-                            {logo.clientName}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Mobile Marquee */}
-                <div className="flex sm:hidden w-max animate-marquee-mobile">
-                  {/* Group 1 */}
-                  <div className="flex items-center gap-10 shrink-0 pr-10">
-                    {repeated.map((logo, idx) => (
-                      <div
-                        key={`g1-m-${logo.id || idx}-${idx}`}
-                        className="flex items-center justify-center h-20 px-3 transition-all duration-300 hover:scale-105"
-                        style={{ transform: "none" }}
-                      >
-                        {logo.imageUrl ? (
-                          <img
-                            src={optimizeLogoUrl(logo.imageUrl)}
-                            alt={logo.clientName}
-                            className="h-[70%] max-w-[200px] object-contain select-none"
-                            style={{ transform: "none" }}
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <span className="text-lg font-display font-extrabold text-slate-500 tracking-tight transition-colors duration-300 hover:text-brand-primary-950">
-                            {logo.clientName}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {/* Group 2 */}
-                  <div className="flex items-center gap-10 shrink-0 pr-10" aria-hidden="true">
-                    {repeated.map((logo, idx) => (
-                      <div
-                        key={`g2-m-${logo.id || idx}-${idx}`}
-                        className="flex items-center justify-center h-20 px-3 transition-all duration-300 hover:scale-105"
-                        style={{ transform: "none" }}
-                      >
-                        {logo.imageUrl ? (
-                          <img
-                            src={optimizeLogoUrl(logo.imageUrl)}
-                            alt={logo.clientName}
-                            className="h-[70%] max-w-[200px] object-contain select-none"
-                            style={{ transform: "none" }}
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <span className="text-lg font-display font-extrabold text-slate-500 tracking-tight transition-colors duration-300 hover:text-brand-primary-950">
+                          <span className="text-lg md:text-2xl font-display font-extrabold text-slate-500 tracking-tight transition-colors duration-300 hover:text-brand-primary-950">
                             {logo.clientName}
                           </span>
                         )}

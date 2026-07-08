@@ -53,22 +53,16 @@
   }
 }
 
-.animate-marquee-desktop {
+.animate-marquee {
   display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
   width: max-content;
-  animation: marquee 25s linear infinite;
+  animation: marquee 45s linear infinite;
   will-change: transform;
 }
 
-.animate-marquee-mobile {
-  display: flex;
-  width: max-content;
-  animation: marquee 35s linear infinite;
-  will-change: transform;
-}
-
-.animate-marquee-desktop:hover,
-.animate-marquee-mobile:hover {
+.animate-marquee:hover {
   animation-play-state: paused;
 }
 
