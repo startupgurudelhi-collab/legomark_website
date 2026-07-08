@@ -211,16 +211,16 @@
   ],
   "logosDb": [
     {
-      "id": "logo-001",
-      "clientName": "Acme Corp New",
-      "imageUrl": "https://images.unsplash.com/photo-1560179707-f14e90ef3623?q=80&w=150&auto=format&fit=crop",
+      "id": "logo-custom-01",
+      "clientName": "Google Cloud",
+      "imageUrl": "https://images.unsplash.com/photo-1572021335469-31706a17aaef?q=80&w=150&auto=format&fit=crop",
       "sortOrder": 1,
       "status": "Active"
     },
     {
-      "id": "logo-002",
-      "clientName": "Venture Partners New",
-      "imageUrl": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=150&auto=format&fit=crop",
+      "id": "logo-custom-02",
+      "clientName": "Microsoft",
+      "imageUrl": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=150&auto=format&fit=crop",
       "sortOrder": 2,
       "status": "Active"
     }

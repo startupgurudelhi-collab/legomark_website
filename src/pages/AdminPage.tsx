@@ -122,7 +122,7 @@ export default function AdminPage() {
   const [tasks, setTasks] = useState<AdminTask[]>(() => getStoredState("tasks", initialTasks));
   const [blogs, setBlogs] = useState<AdminBlogPost[]>(() => getStoredState("blogs", initialBlogPosts));
   const [testimonials, setTestimonials] = useState<AdminTestimonial[]>(() => getStoredState("testimonials", initialTestimonials));
-  const [logos, setLogos] = useState<AdminClientLogo[]>(() => getStoredState("logos", initialClientLogos));
+  const [logos, setLogos] = useState<AdminClientLogo[]>(initialClientLogos);
   const [faqs, setFaqs] = useState<AdminFaq[]>(() => getStoredState("faqs", initialGlobalFaqs));
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>(() => getStoredState("media", initialMediaFiles));
   const [homepageCms, setHomepageCms] = useState<CmsHomepage>(() => getStoredState("homepage", initialCmsHomepage));
@@ -191,7 +191,6 @@ export default function AdminPage() {
   useEffect(() => { setStoredState("tasks", tasks); }, [tasks]);
   useEffect(() => { setStoredState("blogs", blogs); }, [blogs]);
   useEffect(() => { setStoredState("testimonials", testimonials); }, [testimonials]);
-  useEffect(() => { setStoredState("logos", logos); }, [logos]);
   useEffect(() => { setStoredState("faqs", faqs); }, [faqs]);
   useEffect(() => { setStoredState("media", mediaFiles); }, [mediaFiles]);
   useEffect(() => { setStoredState("homepage", homepageCms); }, [homepageCms]);
