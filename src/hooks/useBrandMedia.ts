@@ -151,10 +151,21 @@ export function useBrandMedia() {
     fetch("/api/cms/config")
       .then(res => res.json())
       .then(res => {
-        if (res.success && res.data && res.data.settings && res.data.settings.brandMedia) {
-          const remoteMedia = res.data.settings.brandMedia;
-          const merged = { ...DEFAULT_BRAND_MEDIA, ...remoteMedia };
-          saveBrandMedia(merged);
+        if (res.success && res.data && res.data.settings) {
+          if (res.data.settings.brandMedia) {
+            const remoteMedia = res.data.settings.brandMedia;
+            const merged = { ...DEFAULT_BRAND_MEDIA, ...remoteMedia };
+            saveBrandMedia(merged);
+          } else {
+            // Server doesn't have brandMedia, but client might have it in localStorage!
+            // If client has non-default brandMedia, and we are logged in as admin, sync it to the server
+            const localMedia = getBrandMedia();
+            const hasCustomMedia = JSON.stringify(localMedia) !== JSON.stringify(DEFAULT_BRAND_MEDIA);
+            const token = window.localStorage.getItem("efilingg_token");
+            if (hasCustomMedia && token) {
+              syncBrandMediaToServer(localMedia);
+            }
+          }
         }
       })
       .catch(err => console.warn("Failed to fetch brand media from server on mount:", err));

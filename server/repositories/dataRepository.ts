@@ -484,9 +484,6 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
       }
       Object.assign(store.contactInfoDb, sectionData);
     } else if (sectionKey === "adminSettingsDb") {
-      for (const key in store.adminSettingsDb) {
-        delete (store.adminSettingsDb as any)[key];
-      }
       Object.assign(store.adminSettingsDb, sectionData);
     } else if (sectionKey === "mediaDb") {
       store.mediaDb.length = 0;
