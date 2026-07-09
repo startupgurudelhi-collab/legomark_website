@@ -696,6 +696,89 @@ export const adminSettingsDb = {
   calendlyLink: "https://calendly.com/legomark/15min"
 };
 
+export const brandMediaDb = {
+  logo: {
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='90' height='90' x='5' y='5' rx='16' fill='%230c1b33'/><path d='M30 30 L50 45 L70 30' fill='none' stroke='%23e0a96d' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 70 L30 30 L50 50 L70 30 L70 70' fill='none' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><circle cx='50' cy='70' r='5' fill='%23e0a96d'/></svg>",
+    fileName: "logo.svg",
+    fileSize: "1.2 KB",
+    lastUpdated: "2026-07-09",
+  },
+  favicon: {
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='90' height='90' x='5' y='5' rx='16' fill='%230c1b33'/><path d='M30 30 L50 45 L70 30' fill='none' stroke='%23e0a96d' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 70 L30 30 L50 50 L70 30 L70 70' fill='none' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><circle cx='50' cy='70' r='5' fill='%23e0a96d'/></svg>",
+    fileName: "favicon.svg",
+    fileSize: "1.2 KB",
+    lastUpdated: "2026-07-09",
+  },
+  founderPhoto: {
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%230f172a'/><circle cx='100' cy='100' r='80' fill='%231e293b'/><circle cx='100' cy='80' r='30' fill='%23e2e8f0'/><path d='M60 160 C 60 120, 140 120, 140 160 Z' fill='%23e2e8f0'/><path d='M85 110 L100 125 L115 110' fill='none' stroke='%23e0a96d' stroke-width='4' stroke-linecap='round'/></svg>",
+    fileName: "founder_avatar.svg",
+    fileSize: "1.5 KB",
+    lastUpdated: "2026-07-09",
+  },
+  officeMain: {
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'><rect width='400' height='250' fill='%230c1b33'/><line x1='50' y1='220' x2='350' y2='220' stroke='%23e0a96d' stroke-width='4'/><rect x='80' y='60' width='80' height='160' fill='%231e293b' stroke='%23ffffff' stroke-width='2'/><rect x='160' y='100' width='160' height='120' fill='%231e293b' stroke='%23ffffff' stroke-width='2'/><line x1='120' y1='60' x2='120' y2='220' stroke='%23e0a96d' stroke-dasharray='5,5'/><line x1='240' y1='100' x2='240' y2='220' stroke='%23e0a96d' stroke-dasharray='5,5'/></svg>",
+    fileName: "office_illustration.svg",
+    fileSize: "1.8 KB",
+    lastUpdated: "2026-07-09",
+  },
+  officeGallery: [
+    {
+      url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'><rect width='200' height='150' fill='%230f172a'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-family='sans-serif' font-size='12'>Office Room 1</text></svg>",
+      fileName: "office_room_1.svg",
+      fileSize: "1.1 KB",
+      lastUpdated: "2026-07-09",
+    },
+    {
+      url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'><rect width='200' height='150' fill='%230f172a'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-family='sans-serif' font-size='12'>Conference Hall</text></svg>",
+      fileName: "conference_hall.svg",
+      fileSize: "1.1 KB",
+      lastUpdated: "2026-07-09",
+    },
+    {
+      url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'><rect width='200' height='150' fill='%230f172a'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-family='sans-serif' font-size='12'>Reception Lounge</text></svg>",
+      fileName: "reception_lounge.svg",
+      fileSize: "1.1 KB",
+      lastUpdated: "2026-07-09",
+    },
+  ],
+  defaultServiceBanner: {
+    url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1200&auto=format&fit=crop",
+    fileName: "service_default_banner.jpg",
+    fileSize: "380 KB",
+    lastUpdated: "2026-06-15",
+  },
+  defaultBlogBanner: {
+    url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1200&auto=format&fit=crop",
+    fileName: "blog_default_banner.jpg",
+    fileSize: "420 KB",
+    lastUpdated: "2026-06-15",
+  },
+  careerBanner: {
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 150'><rect width='400' height='150' fill='%230c1b33'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='16'>Careers at Legomark</text></svg>",
+    fileName: "career_banner.svg",
+    fileSize: "1.3 KB",
+    lastUpdated: "2026-07-09",
+  },
+  testimonialThumbnail: {
+    url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop",
+    fileName: "testimonial_placeholder.jpg",
+    fileSize: "18 KB",
+    lastUpdated: "2026-06-10",
+  },
+  companyProfile: {
+    url: "#profile",
+    fileName: "company-profile.pdf",
+    fileSize: "1.2 MB",
+    lastUpdated: "2026-06-28",
+  },
+  companyBrochure: {
+    url: "#brochure",
+    fileName: "company-brochure.pdf",
+    fileSize: "2.4 MB",
+    lastUpdated: "2026-06-28",
+  },
+};
+
 export const automationLogsDb: any[] = [];
 
 export interface EmailQueueItem {

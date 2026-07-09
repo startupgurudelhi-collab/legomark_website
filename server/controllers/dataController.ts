@@ -387,6 +387,24 @@ export const CmsConfigController = {
     }
   },
 
+  async getBrandMedia(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await CmsConfigService.getBrandMedia();
+      return sendSuccess(res, "Brand media settings loaded", data);
+    } catch (err) {
+      return sendError(res, err, "Failed to retrieve brand media settings");
+    }
+  },
+
+  async updateBrandMedia(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await CmsConfigService.updateBrandMedia(req.body);
+      return sendSuccess(res, "Brand media settings updated successfully", data);
+    } catch (err) {
+      return sendError(res, err, "Failed to update brand media settings");
+    }
+  },
+
   async updateTestimonials(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await CmsConfigService.updateTestimonials(req.body);

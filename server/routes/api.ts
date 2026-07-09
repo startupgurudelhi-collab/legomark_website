@@ -104,10 +104,12 @@ router.post("/support/tickets/:id/reply", requireAuth, SupportController.reply);
 
 // System Settings & CMS Elements
 router.get("/cms/config", CmsConfigController.get);
+router.get("/cms/brand-media", CmsConfigController.getBrandMedia);
 router.get("/cms/testimonials", CmsConfigController.getTestimonials);
 router.put("/cms/homepage", requireAuth, CmsConfigController.updateHomepage);
 router.put("/cms/contact", requireAuth, CmsConfigController.updateContact);
 router.put("/cms/settings", requireAuth, CmsConfigController.updateSettings);
+router.put("/cms/brand-media", requireAuth, CmsConfigController.updateBrandMedia);
 router.put("/cms/testimonials", requireAuth, CmsConfigController.updateTestimonials);
 router.put("/cms/logos", requireAuth, CmsConfigController.updateLogos);
 router.put("/cms/faqs", requireAuth, CmsConfigController.updateFaqs);

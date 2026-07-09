@@ -119,25 +119,14 @@ export async function syncBrandMediaToServer(config: BrandMediaConfig) {
     const token = window.localStorage.getItem("efilingg_token");
     if (!token) return;
 
-    // First fetch current settings to prevent over-writing other settings
-    const res = await fetch("/api/cms/config");
-    const json = await res.json();
-    if (json.success && json.data && json.data.settings) {
-      const currentSettings = json.data.settings;
-      const updatedSettings = {
-        ...currentSettings,
-        brandMedia: config
-      };
-
-      await fetch("/api/cms/settings", {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(updatedSettings)
-      });
-    }
+    await fetch("/api/cms/brand-media", {
+      method: "PUT",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(config)
+    });
   } catch (error) {
     console.warn("Failed to sync brand media to server:", error);
   }
@@ -148,23 +137,21 @@ export function useBrandMedia() {
 
   useEffect(() => {
     // Sync from server on mount
-    fetch("/api/cms/config")
+    fetch("/api/cms/brand-media")
       .then(res => res.json())
       .then(res => {
-        if (res.success && res.data && res.data.settings) {
-          if (res.data.settings.brandMedia) {
-            const remoteMedia = res.data.settings.brandMedia;
-            const merged = { ...DEFAULT_BRAND_MEDIA, ...remoteMedia };
-            saveBrandMedia(merged);
-          } else {
-            // Server doesn't have brandMedia, but client might have it in localStorage!
-            // If client has non-default brandMedia, and we are logged in as admin, sync it to the server
-            const localMedia = getBrandMedia();
-            const hasCustomMedia = JSON.stringify(localMedia) !== JSON.stringify(DEFAULT_BRAND_MEDIA);
-            const token = window.localStorage.getItem("efilingg_token");
-            if (hasCustomMedia && token) {
-              syncBrandMediaToServer(localMedia);
-            }
+        if (res.success && res.data) {
+          const remoteMedia = res.data;
+          const merged = { ...DEFAULT_BRAND_MEDIA, ...remoteMedia };
+          saveBrandMedia(merged);
+        } else {
+          // Server doesn't have brandMedia, but client might have it in localStorage!
+          // If client has non-default brandMedia, and we are logged in as admin, sync it to the server
+          const localMedia = getBrandMedia();
+          const hasCustomMedia = JSON.stringify(localMedia) !== JSON.stringify(DEFAULT_BRAND_MEDIA);
+          const token = window.localStorage.getItem("efilingg_token");
+          if (hasCustomMedia && token) {
+            syncBrandMediaToServer(localMedia);
           }
         }
       })
