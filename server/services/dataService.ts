@@ -497,20 +497,11 @@ export const CmsConfigService = {
     const homepage = await CmsConfigRepository.getHomepage();
     const contact = await CmsConfigRepository.getContact();
     const settings = await CmsConfigRepository.getSettings();
-    const brandMedia = await CmsConfigRepository.getBrandMedia();
     const media = await CmsConfigRepository.getMedia();
     const testimonials = await CmsConfigRepository.getTestimonials();
     const logos = await CmsConfigRepository.getLogos();
     const faqs = await CmsConfigRepository.getFaqs();
-    return { homepage, contact, settings, brandMedia, media, testimonials, logos, faqs };
-  },
-
-  async getBrandMedia() {
-    return CmsConfigRepository.getBrandMedia();
-  },
-
-  async updateBrandMedia(updates: any) {
-    return CmsConfigRepository.updateBrandMedia(updates);
+    return { homepage, contact, settings, media, testimonials, logos, faqs };
   },
 
   async getTestimonialsOnly() {

@@ -28,7 +28,6 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
 
   // Drag and drop simulator
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleSelect = (logo: AdminClientLogo) => {
     setSelectedLogo(logo);
@@ -142,24 +141,10 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
       return;
     }
 
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("thumbnail", file);
-
-    const token = localStorage.getItem("efilingg_token");
-    
-    fetch("/api/cms/upload-thumbnail", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token || ""}`
-      },
-      body: formData
-    })
-    .then(res => res.json())
-    .then(res => {
-      setIsUploading(false);
-      if (res.success && res.data && res.data.url) {
-        setUploadedImage(res.data.url);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setUploadedImage(reader.result);
         setCdnUrl("");
         
         // Clean up the filename to use as default clientName if empty
@@ -171,47 +156,13 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
           setClientName(formattedName);
         }
         
-        toast.success("Image uploaded successfully to server.", "Upload Success");
-      } else {
-        // Fallback to local Base64 reading if upload route fails
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (typeof reader.result === "string") {
-            setUploadedImage(reader.result);
-            setCdnUrl("");
-            if (!clientName.trim()) {
-              const baseName = file.name.replace(/\.[^/.]+$/, "");
-              const formattedName = baseName
-                .replace(/[-_]/g, " ")
-                .replace(/\b\w/g, (char) => char.toUpperCase());
-              setClientName(formattedName);
-            }
-            toast.warn("Server upload failed, fell back to local Base64 storage.", "Local Sync Active");
-          }
-        };
-        reader.readAsDataURL(file);
+        toast.success("Image selected and parsed successfully.", "Preview Generated");
       }
-    })
-    .catch(err => {
-      setIsUploading(false);
-      // Fallback to local Base64 reading if fetch throws
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          setUploadedImage(reader.result);
-          setCdnUrl("");
-          if (!clientName.trim()) {
-            const baseName = file.name.replace(/\.[^/.]+$/, "");
-            const formattedName = baseName
-              .replace(/[-_]/g, " ")
-              .replace(/\b\w/g, (char) => char.toUpperCase());
-            setClientName(formattedName);
-          }
-          toast.warn("Server upload failed, fell back to local Base64 storage.", "Local Sync Active");
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read the file.", "Processing Error");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -324,12 +275,7 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
               isDragging ? "bg-brand-primary-50 border-brand-primary-500" : "bg-slate-50/50 border-slate-200 hover:bg-slate-50"
             }`}
           >
-            {isUploading ? (
-              <div className="space-y-2 py-4 animate-pulse">
-                <div className="mx-auto h-5 w-5 rounded-full border-2 border-slate-400 border-t-transparent animate-spin"></div>
-                <div className="text-xs font-bold text-slate-600">Uploading to server...</div>
-              </div>
-            ) : uploadedImage || cdnUrl || (selectedLogo ? selectedLogo.imageUrl : "") ? (
+            {uploadedImage || cdnUrl || (selectedLogo ? selectedLogo.imageUrl : "") ? (
               <div className="space-y-2">
                 <img
                   src={uploadedImage || cdnUrl || (selectedLogo ? selectedLogo.imageUrl : "")}

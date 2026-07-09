@@ -443,12 +443,6 @@ function loadCmsPersistence() {
           }
           Object.assign(store.adminSettingsDb, data.adminSettingsDb);
         }
-        if (data.brandMediaDb) {
-          for (const key in store.brandMediaDb) {
-            delete (store.brandMediaDb as any)[key];
-          }
-          Object.assign(store.brandMediaDb, data.brandMediaDb);
-        }
         if (data.mediaDb) {
           store.mediaDb.length = 0;
           store.mediaDb.push(...data.mediaDb);
@@ -491,11 +485,6 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
       Object.assign(store.contactInfoDb, sectionData);
     } else if (sectionKey === "adminSettingsDb") {
       Object.assign(store.adminSettingsDb, sectionData);
-    } else if (sectionKey === "brandMediaDb") {
-      for (const key in store.brandMediaDb) {
-        delete (store.brandMediaDb as any)[key];
-      }
-      Object.assign(store.brandMediaDb, sectionData);
     } else if (sectionKey === "mediaDb") {
       store.mediaDb.length = 0;
       store.mediaDb.push(...sectionData);
@@ -515,7 +504,6 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
       homepageCmsDb: store.homepageCmsDb,
       contactInfoDb: store.contactInfoDb,
       adminSettingsDb: store.adminSettingsDb,
-      brandMediaDb: store.brandMediaDb,
       mediaDb: store.mediaDb,
       testimonialsDb: store.testimonialsDb,
       logosDb: store.logosDb,
@@ -561,14 +549,6 @@ export const CmsConfigRepository = {
   async updateSettings(updates: any) {
     mergeCmsSectionAndSave("adminSettingsDb", updates);
     return store.adminSettingsDb;
-  },
-  async getBrandMedia() {
-    loadCmsPersistence();
-    return store.brandMediaDb;
-  },
-  async updateBrandMedia(updates: any) {
-    mergeCmsSectionAndSave("brandMediaDb", updates);
-    return store.brandMediaDb;
   },
   async getMedia() {
     loadCmsPersistence();
