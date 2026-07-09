@@ -257,10 +257,6 @@ const blogPosts = [
   },
 ];
 
-const clientLogos = [
-  "Tata Group (Partner)", "Mahindra Co.", "Swiggy Delivery", "Zomato India", "Razorpay Tech", "HDFC Corporate"
-];
-
 const optimizeLogoUrl = (url: string): string => {
   if (!url) return "";
   if (url.includes("unsplash.com")) {
@@ -1566,9 +1562,7 @@ export default function HomePage() {
 
       {/* 8. CLIENT LOGOS */}
       {(() => {
-        const marqueeItems = logosList.length > 0
-          ? logosList.map(logo => ({ id: logo.id, clientName: logo.clientName, imageUrl: logo.imageUrl }))
-          : clientLogos.map((name, i) => ({ id: `fallback-${i}`, clientName: name, imageUrl: "" }));
+        const marqueeItems = logosList.map(logo => ({ id: logo.id, clientName: logo.clientName, imageUrl: logo.imageUrl }));
         
         if (marqueeItems.length === 0) return null;
 
