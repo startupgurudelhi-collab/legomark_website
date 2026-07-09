@@ -407,45 +407,81 @@ export default function SettingsTab({ settings, onUpdateSettings }: SettingsTabP
       return;
     }
 
-    // Convert file to Base64 to store in localStorage (simulating database/cloud persistence fallback)
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64Url = reader.result as string;
-      const sizeFormatted = file.size > 1024 * 1024 
-        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
-        : `${Math.round(file.size / 1024)} KB`;
+    const sizeFormatted = file.size > 1024 * 1024 
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` 
+      : `${Math.round(file.size / 1024)} KB`;
 
-      const updatedAsset: BrandAsset = {
-        url: base64Url,
-        fileName: file.name,
-        fileSize: sizeFormatted,
-        lastUpdated: new Date().toISOString().split('T')[0]
-      };
+    const formData = new FormData();
+    formData.append("thumbnail", file);
 
-      if (key === 'officeGallery') {
-        if (typeof index === 'number') {
-          // Replace specific item
-          const updatedGallery = [...brandConfig.officeGallery];
-          updatedGallery[index] = updatedAsset;
-          updateOfficeGallery(updatedGallery);
-          toast.success("Gallery slot replaced successfully!", "Branding Updated");
+    const token = localStorage.getItem("efilingg_token");
+    
+    fetch("/api/cms/upload-thumbnail", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token || ""}`
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success && res.data && res.data.url) {
+        const updatedAsset: BrandAsset = {
+          url: res.data.url,
+          fileName: file.name,
+          fileSize: sizeFormatted,
+          lastUpdated: new Date().toISOString().split('T')[0]
+        };
+
+        if (key === 'officeGallery') {
+          if (typeof index === 'number') {
+            const updatedGallery = [...brandConfig.officeGallery];
+            updatedGallery[index] = updatedAsset;
+            updateOfficeGallery(updatedGallery);
+            toast.success("Gallery slot replaced successfully on server!", "Branding Updated");
+          } else {
+            const updatedGallery = [...brandConfig.officeGallery, updatedAsset];
+            updateOfficeGallery(updatedGallery);
+            toast.success("Asset appended to Office Showcase Gallery on server!", "Branding Updated");
+          }
         } else {
-          // Add new item
-          const updatedGallery = [...brandConfig.officeGallery, updatedAsset];
-          updateOfficeGallery(updatedGallery);
-          toast.success("Asset appended to Office Showcase Gallery!", "Branding Updated");
+          updateAsset(key, updatedAsset);
+          toast.success(`${file.name} registered on server as corporate active asset.`, "Branding Updated");
         }
       } else {
-        updateAsset(key, updatedAsset);
-        toast.success(`${file.name} registered as corporate active asset.`, "Branding Updated");
+        throw new Error(res.message || "Failed to upload file to backend.");
       }
-    };
+    })
+    .catch(err => {
+      console.warn("Upload to backend failed, falling back to local Base64 storage:", err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Url = reader.result as string;
+        const updatedAsset: BrandAsset = {
+          url: base64Url,
+          fileName: file.name,
+          fileSize: sizeFormatted,
+          lastUpdated: new Date().toISOString().split('T')[0]
+        };
 
-    reader.onerror = () => {
-      toast.error("An error occurred while reading the file stream.", "Read Error");
-    };
-
-    reader.readAsDataURL(file);
+        if (key === 'officeGallery') {
+          if (typeof index === 'number') {
+            const updatedGallery = [...brandConfig.officeGallery];
+            updatedGallery[index] = updatedAsset;
+            updateOfficeGallery(updatedGallery);
+            toast.success("Gallery slot updated (local fallback)!", "Branding Updated");
+          } else {
+            const updatedGallery = [...brandConfig.officeGallery, updatedAsset];
+            updateOfficeGallery(updatedGallery);
+            toast.success("Asset appended (local fallback)!", "Branding Updated");
+          }
+        } else {
+          updateAsset(key, updatedAsset);
+          toast.success(`${file.name} registered (local fallback).`, "Branding Updated");
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleRemoveAsset = (key: keyof BrandMediaConfig, index?: number) => {

@@ -8,47 +8,47 @@ import { BrandMediaConfig, BrandAsset } from "../types/brand.js";
 
 export const DEFAULT_BRAND_MEDIA: BrandMediaConfig = {
   logo: {
-    url: "/logo.png",
-    fileName: "logo.png",
-    fileSize: "15 KB",
-    lastUpdated: "2026-06-25",
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='90' height='90' x='5' y='5' rx='16' fill='%230c1b33'/><path d='M30 30 L50 45 L70 30' fill='none' stroke='%23e0a96d' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 70 L30 30 L50 50 L70 30 L70 70' fill='none' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><circle cx='50' cy='70' r='5' fill='%23e0a96d'/></svg>",
+    fileName: "logo.svg",
+    fileSize: "1.2 KB",
+    lastUpdated: "2026-07-09",
   },
   favicon: {
-    url: "/favicon.ico",
-    fileName: "favicon.ico",
-    fileSize: "5 KB",
-    lastUpdated: "2026-06-25",
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='90' height='90' x='5' y='5' rx='16' fill='%230c1b33'/><path d='M30 30 L50 45 L70 30' fill='none' stroke='%23e0a96d' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><path d='M30 70 L30 30 L50 50 L70 30 L70 70' fill='none' stroke='%23ffffff' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/><circle cx='50' cy='70' r='5' fill='%23e0a96d'/></svg>",
+    fileName: "favicon.svg",
+    fileSize: "1.2 KB",
+    lastUpdated: "2026-07-09",
   },
   founderPhoto: {
-    url: "/founder.jpg",
-    fileName: "founder.jpg",
-    fileSize: "145 KB",
-    lastUpdated: "2026-06-20",
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%230f172a'/><circle cx='100' cy='100' r='80' fill='%231e293b'/><circle cx='100' cy='80' r='30' fill='%23e2e8f0'/><path d='M60 160 C 60 120, 140 120, 140 160 Z' fill='%23e2e8f0'/><path d='M85 110 L100 125 L115 110' fill='none' stroke='%23e0a96d' stroke-width='4' stroke-linecap='round'/></svg>",
+    fileName: "founder_avatar.svg",
+    fileSize: "1.5 KB",
+    lastUpdated: "2026-07-09",
   },
   officeMain: {
-    url: "/office-premises.jpg",
-    fileName: "office-premises.jpg",
-    fileSize: "320 KB",
-    lastUpdated: "2026-06-20",
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'><rect width='400' height='250' fill='%230c1b33'/><line x1='50' y1='220' x2='350' y2='220' stroke='%23e0a96d' stroke-width='4'/><rect x='80' y='60' width='80' height='160' fill='%231e293b' stroke='%23ffffff' stroke-width='2'/><rect x='160' y='100' width='160' height='120' fill='%231e293b' stroke='%23ffffff' stroke-width='2'/><line x1='120' y1='60' x2='120' y2='220' stroke='%23e0a96d' stroke-dasharray='5,5'/><line x1='240' y1='100' x2='240' y2='220' stroke='%23e0a96d' stroke-dasharray='5,5'/></svg>",
+    fileName: "office_illustration.svg",
+    fileSize: "1.8 KB",
+    lastUpdated: "2026-07-09",
   },
   officeGallery: [
     {
-      url: "/career/workplace.jpg",
-      fileName: "workplace.jpg",
-      fileSize: "240 KB",
-      lastUpdated: "2026-06-18",
+      url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'><rect width='200' height='150' fill='%230f172a'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-family='sans-serif' font-size='12'>Office Room 1</text></svg>",
+      fileName: "office_room_1.svg",
+      fileSize: "1.1 KB",
+      lastUpdated: "2026-07-09",
     },
     {
-      url: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop",
-      fileName: "office_lounge.jpg",
-      fileSize: "185 KB",
-      lastUpdated: "2026-06-18",
+      url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'><rect width='200' height='150' fill='%230f172a'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-family='sans-serif' font-size='12'>Conference Hall</text></svg>",
+      fileName: "conference_hall.svg",
+      fileSize: "1.1 KB",
+      lastUpdated: "2026-07-09",
     },
     {
-      url: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=600&auto=format&fit=crop",
-      fileName: "meeting_room.jpg",
-      fileSize: "210 KB",
-      lastUpdated: "2026-06-18",
+      url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'><rect width='200' height='150' fill='%230f172a'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23e2e8f0' font-family='sans-serif' font-size='12'>Reception Lounge</text></svg>",
+      fileName: "reception_lounge.svg",
+      fileSize: "1.1 KB",
+      lastUpdated: "2026-07-09",
     },
   ],
   defaultServiceBanner: {
@@ -64,10 +64,10 @@ export const DEFAULT_BRAND_MEDIA: BrandMediaConfig = {
     lastUpdated: "2026-06-15",
   },
   careerBanner: {
-    url: "/career/workplace.jpg",
-    fileName: "workplace.jpg",
-    fileSize: "240 KB",
-    lastUpdated: "2026-06-18",
+    url: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 150'><rect width='400' height='150' fill='%230c1b33'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='sans-serif' font-size='16'>Careers at Legomark</text></svg>",
+    fileName: "career_banner.svg",
+    fileSize: "1.3 KB",
+    lastUpdated: "2026-07-09",
   },
   testimonialThumbnail: {
     url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop",
@@ -96,8 +96,8 @@ export function getBrandMedia(): BrandMediaConfig {
     const item = window.localStorage.getItem(STORAGE_KEY);
     if (item) {
       const parsed = JSON.parse(item);
-      // Ensure all fields are present
-      return { ...DEFAULT_BRAND_MEDIA, ...parsed };
+      const resolved = { ...DEFAULT_BRAND_MEDIA, ...parsed };
+      return resolved;
     }
   } catch (error) {
     console.warn("Failed to parse brand media from storage", error);
@@ -114,10 +114,51 @@ export function saveBrandMedia(config: BrandMediaConfig) {
   }
 }
 
+export async function syncBrandMediaToServer(config: BrandMediaConfig) {
+  try {
+    const token = window.localStorage.getItem("efilingg_token");
+    if (!token) return;
+
+    // First fetch current settings to prevent over-writing other settings
+    const res = await fetch("/api/cms/config");
+    const json = await res.json();
+    if (json.success && json.data && json.data.settings) {
+      const currentSettings = json.data.settings;
+      const updatedSettings = {
+        ...currentSettings,
+        brandMedia: config
+      };
+
+      await fetch("/api/cms/settings", {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updatedSettings)
+      });
+    }
+  } catch (error) {
+    console.warn("Failed to sync brand media to server:", error);
+  }
+}
+
 export function useBrandMedia() {
   const [config, setConfig] = useState<BrandMediaConfig>(getBrandMedia);
 
   useEffect(() => {
+    // Sync from server on mount
+    fetch("/api/cms/config")
+      .then(res => res.json())
+      .then(res => {
+        if (res.success && res.data && res.data.settings && res.data.settings.brandMedia) {
+          const remoteMedia = res.data.settings.brandMedia;
+          const merged = { ...DEFAULT_BRAND_MEDIA, ...remoteMedia };
+          saveBrandMedia(merged);
+        }
+      })
+      .catch(err => console.warn("Failed to fetch brand media from server on mount:", err));
+
     const handleUpdate = () => {
       setConfig(getBrandMedia());
     };
@@ -148,18 +189,23 @@ export function useBrandMedia() {
     }
 
     saveBrandMedia(updated);
+    syncBrandMediaToServer(updated);
   };
 
   const updateOfficeGallery = (gallery: BrandAsset[]) => {
     const current = getBrandMedia();
     const updated = { ...current, officeGallery: gallery };
     saveBrandMedia(updated);
+    syncBrandMediaToServer(updated);
   };
 
   return {
     config,
     updateAsset,
     updateOfficeGallery,
-    resetToDefaults: () => saveBrandMedia(DEFAULT_BRAND_MEDIA),
+    resetToDefaults: () => {
+      saveBrandMedia(DEFAULT_BRAND_MEDIA);
+      syncBrandMediaToServer(DEFAULT_BRAND_MEDIA);
+    },
   };
 }
