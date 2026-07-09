@@ -141,10 +141,22 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setUploadedImage(reader.result);
+    // Attempt real file upload to server
+    const token = localStorage.getItem("efilingg_token");
+    const formData = new FormData();
+    formData.append("thumbnail", file);
+
+    fetch("/api/cms/upload-thumbnail", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token || ""}`
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(res => {
+      if (res.success && res.data && res.data.url) {
+        setUploadedImage(res.data.url);
         setCdnUrl("");
         
         // Clean up the filename to use as default clientName if empty
@@ -156,13 +168,35 @@ export default function LogosTab({ logos, onUpdateLogos }: LogosTabProps) {
           setClientName(formattedName);
         }
         
-        toast.success("Image selected and parsed successfully.", "Preview Generated");
+        toast.success("Image uploaded successfully to server.", "Upload Success");
+      } else {
+        throw new Error(res.message || "Failed to upload logo to server.");
       }
-    };
-    reader.onerror = () => {
-      toast.error("Failed to read the file.", "Processing Error");
-    };
-    reader.readAsDataURL(file);
+    })
+    .catch(err => {
+      console.warn("Upload to backend failed, falling back to local Base64 storage:", err);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setUploadedImage(reader.result);
+          setCdnUrl("");
+          
+          if (!clientName.trim()) {
+            const baseName = file.name.replace(/\.[^/.]+$/, ""); // remove extension
+            const formattedName = baseName
+              .replace(/[-_]/g, " ") // replace hyphens/underscores with spaces
+              .replace(/\b\w/g, (char) => char.toUpperCase()); // title case
+            setClientName(formattedName);
+          }
+          
+          toast.success("Image selected (local fallback Base64).", "Preview Generated");
+        }
+      };
+      reader.onerror = () => {
+        toast.error("Failed to read the file.", "Processing Error");
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleDrop = (e: React.DragEvent) => {
