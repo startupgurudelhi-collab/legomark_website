@@ -12,9 +12,10 @@ import { useToast } from "../../contexts/ToastContext.js";
 interface PackagesTabProps {
   packages: AdminPackage[];
   onUpdatePackages: (packages: AdminPackage[]) => void;
+  services?: any[];
 }
 
-export default function PackagesTab({ packages, onUpdatePackages }: PackagesTabProps) {
+export default function PackagesTab({ packages, onUpdatePackages, services = [] }: PackagesTabProps) {
   const toast = useToast();
   const [selectedPackage, setSelectedPackage] = useState<AdminPackage | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
@@ -209,13 +210,34 @@ export default function PackagesTab({ packages, onUpdatePackages }: PackagesTabP
               id="pkg-name"
             />
 
-            <Input
-              label="Associated Service Name"
-              placeholder="e.g. Private Limited Company"
-              value={serviceId}
-              onChange={(e) => setServiceId(e.target.value)}
-              id="pkg-service"
-            />
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase text-slate-400">Associated Service Name *</label>
+              <select
+                value={serviceId}
+                onChange={(e) => setServiceId(e.target.value)}
+                className="block w-full mt-1 p-2.5 border border-slate-300 rounded-lg text-xs text-slate-900 bg-white focus:ring-1 focus:ring-slate-950 focus:border-slate-950 focus:outline-none"
+                id="pkg-service"
+              >
+                {(() => {
+                  const activeServices = (services || []).filter((s: any) => s.draftStatus === "Published");
+                  const displayServices = activeServices.length > 0 ? activeServices : (services || []);
+                  const hasSelectedService = displayServices.some((s: any) => s.serviceName === serviceId);
+                  
+                  return (
+                    <>
+                      {!hasSelectedService && serviceId && (
+                        <option value={serviceId}>{serviceId}</option>
+                      )}
+                      {displayServices.map((service: any) => (
+                        <option key={service.id || service.serviceName} value={service.serviceName}>
+                          {service.serviceName}
+                        </option>
+                      ))}
+                    </>
+                  );
+                })()}
+              </select>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <Input

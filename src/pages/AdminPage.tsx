@@ -63,7 +63,8 @@ import {
   AdminOrder,
   initialOrders,
   AdminTask,
-  initialTasks
+  initialTasks,
+  AdminPackage
 } from "../data/adminStore.js";
 
 // Import individual CMS panels
@@ -89,6 +90,43 @@ import { getEffectiveServices } from "../data/servicesData.js";
 import { ServiceData, Category, Subcategory } from "../types/service.js";
 import { useBrandMedia } from "../hooks/useBrandMedia.js";
 import { getEffectiveCategories, getEffectiveSubcategories } from "../data/categoriesData.js";
+
+const initialPackages: AdminPackage[] = [
+  {
+    id: "pkg-1",
+    serviceId: "Private Limited Company",
+    name: "Standard Package",
+    price: 9999,
+    discountPrice: 7999,
+    gstPercent: 18,
+    features: [
+      "2 Digital Signature Certificates (DSC)",
+      "Director Identification Numbers (DIN)",
+      "Name Approval & Filing",
+      "Drafting MoA & AoA",
+      "PAN & TAN Registration"
+    ],
+    displayOrder: 1,
+    cta: "Buy Standard Package"
+  },
+  {
+    id: "pkg-2",
+    serviceId: "Private Limited Company",
+    name: "Premium Growth Package",
+    price: 15999,
+    discountPrice: 12999,
+    gstPercent: 18,
+    features: [
+      "All Standard Package features",
+      "GST Registration",
+      "MSME (Udyam) Certificate",
+      "Corporate Bank Account Opening Assistance",
+      "1-Year Compliance Calendar & Consultation"
+    ],
+    displayOrder: 2,
+    cta: "Upgrade to Premium"
+  }
+];
 
 export default function AdminPage() {
   const { config: brandConfig } = useBrandMedia();
@@ -129,6 +167,7 @@ export default function AdminPage() {
   const [contactInfo, setContactInfo] = useState<CmsContactInfo>(() => getStoredState("contact", initialCmsContactInfo));
   const [headerMenu, setHeaderMenu] = useState<MenuItem[]>(() => getStoredState("menu", initialHeaderMenu));
   const [adminSettings, setAdminSettings] = useState<SettingsType>(() => getStoredState("settings", initialAdminSettings));
+  const [packages, setPackages] = useState<AdminPackage[]>(() => getStoredState("packages", initialPackages));
 
   // Connect actual servicesData (from Dynamic Service Engine) to CMS!
   const [servicesList, setServicesList] = useState<ServiceData[]>(() => {
@@ -198,6 +237,7 @@ export default function AdminPage() {
   useEffect(() => { setStoredState("contact", contactInfo); }, [contactInfo]);
   useEffect(() => { setStoredState("menu", headerMenu); }, [headerMenu]);
   useEffect(() => { setStoredState("settings", adminSettings); }, [adminSettings]);
+  useEffect(() => { setStoredState("packages", packages); }, [packages]);
 
   // Robust server-side syncer helpers for CMS modules
   const handleUpdateTestimonials = async (updated: AdminTestimonial[]) => {
@@ -738,8 +778,9 @@ export default function AdminPage() {
 
           {activeTab === "packages" && (
             <PackagesTab
-              packages={[]} // Loaded or editable list
-              onUpdatePackages={() => alert("Unlimited Pricing Packages configured successfully! Linked directly with services engine pricing overlays.")}
+              packages={packages}
+              onUpdatePackages={setPackages}
+              services={servicesList}
             />
           )}
 
