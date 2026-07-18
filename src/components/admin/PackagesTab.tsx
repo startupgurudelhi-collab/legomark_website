@@ -42,49 +42,70 @@ export default function PackagesTab({ packages, onUpdatePackages, services = [] 
     setCta(pkg.cta);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast.warn("Please provide a package name.", "Missing Info");
       return;
     }
 
     const featuresArray = featuresText.split("\n").filter((f) => f.trim() !== "");
+    const token = localStorage.getItem("efilingg_token");
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": token ? `Bearer ${token}` : ""
+    };
+
+    const pkgPayload = {
+      name,
+      serviceId,
+      price: Number(price),
+      discountPrice: discountPrice > 0 ? Number(discountPrice) : null,
+      gstPercent: Number(gstPercent),
+      displayOrder: Number(displayOrder),
+      features: featuresArray,
+      cta: cta || null
+    };
 
     if (selectedPackage) {
-      const updated = packages.map((p) => {
-        if (p.id === selectedPackage.id) {
-          return {
-            ...p,
-            name,
-            serviceId,
-            price,
-            discountPrice: discountPrice > 0 ? discountPrice : undefined,
-            gstPercent,
-            displayOrder,
-            features: featuresArray,
-            cta
-          };
+      try {
+        const response = await fetch(`/api/cms/packages/${selectedPackage.id}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(pkgPayload)
+        });
+        const result = await response.json();
+        if (result.success && result.data) {
+          const updated = packages.map((p) => p.id === selectedPackage.id ? result.data : p);
+          onUpdatePackages(updated);
+          toast.success("Package details modified.", "Tier Updated");
+          handleClear();
+        } else {
+          toast.error(result.message || "Failed to update package.", "Update Failed");
         }
-        return p;
-      });
-      onUpdatePackages(updated);
-      toast.success("Package details modified.", "Tier Updated");
+      } catch (err) {
+        console.error(err);
+        toast.error("Network error occurred during update.", "Update Failed");
+      }
     } else {
-      const newPkg: AdminPackage = {
-        id: `pkg-${Date.now()}`,
-        name,
-        serviceId,
-        price,
-        discountPrice: discountPrice > 0 ? discountPrice : undefined,
-        gstPercent,
-        displayOrder,
-        features: featuresArray,
-        cta
-      };
-      onUpdatePackages([...packages, newPkg]);
-      toast.success("New Package registered.", "Tier Added");
+      try {
+        const response = await fetch("/api/cms/packages", {
+          method: "POST",
+          headers,
+          body: JSON.stringify(pkgPayload)
+        });
+        const result = await response.json();
+        if (result.success && result.data) {
+          onUpdatePackages([...packages, result.data]);
+          toast.success("New Package registered.", "Tier Added");
+          handleClear();
+        } else {
+          toast.error(result.message || "Failed to create package.", "Creation Failed");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Network error occurred during creation.", "Creation Failed");
+      }
     }
-    handleClear();
   };
 
   const handleDelete = (id: string) => {
@@ -93,13 +114,28 @@ export default function PackagesTab({ packages, onUpdatePackages, services = [] 
     setConfirmDelete({ id, name: pkg.name });
   };
 
-  const executeDelete = (id: string) => {
+  const executeDelete = async (id: string) => {
+    const token = localStorage.getItem("efilingg_token");
+    const headers = {
+      "Authorization": token ? `Bearer ${token}` : ""
+    };
+
     try {
-      onUpdatePackages(packages.filter((p) => p.id !== id));
-      handleClear();
-      toast.success("Item deleted successfully.", "Package Deleted");
+      const response = await fetch(`/api/cms/packages/${id}`, {
+        method: "DELETE",
+        headers
+      });
+      const result = await response.json();
+      if (result.success) {
+        onUpdatePackages(packages.filter((p) => p.id !== id));
+        handleClear();
+        toast.success("Item deleted successfully.", "Package Deleted");
+      } else {
+        toast.error(result.message || "Failed to delete package.", "Deletion Failed");
+      }
     } catch (err) {
-      toast.error("Failed to delete pricing package.", "Deletion Failed");
+      console.error(err);
+      toast.error("Failed to delete pricing package due to network error.", "Deletion Failed");
     }
   };
 

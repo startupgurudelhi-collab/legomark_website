@@ -13,7 +13,8 @@ import {
   BlogsService, 
   BillingService, 
   SupportService, 
-  CmsConfigService 
+  CmsConfigService,
+  PackagesService
 } from "../services/dataService.js";
 import { logger } from "../utils/logger.js";
 
@@ -449,3 +450,47 @@ export const CmsConfigController = {
     }
   }
 };
+
+// ==========================================
+// PACKAGES CMS CONTROLLER
+// ==========================================
+export const PackagesController = {
+  async list(req: Request, res: Response, next: NextFunction) {
+    try {
+      const pkgs = await PackagesService.listAll();
+      return sendSuccess(res, "Packages retrieved successfully", pkgs);
+    } catch (err) {
+      return sendError(res, err, "Failed to retrieve packages");
+    }
+  },
+
+  async create(req: Request, res: Response, next: NextFunction) {
+    try {
+      const pkg = await PackagesService.create(req.body);
+      return sendSuccess(res, "Package created successfully", pkg, HttpStatus.CREATED);
+    } catch (err) {
+      return sendError(res, err, "Failed to create package");
+    }
+  },
+
+  async update(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const updated = await PackagesService.update(id, req.body);
+      return sendSuccess(res, "Package updated successfully", updated);
+    } catch (err) {
+      return sendError(res, err, "Failed to update package");
+    }
+  },
+
+  async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      await PackagesService.delete(id);
+      return sendSuccess(res, "Package deleted successfully");
+    } catch (err) {
+      return sendError(res, err, "Failed to delete package");
+    }
+  }
+};
+

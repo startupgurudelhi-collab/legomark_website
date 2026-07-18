@@ -819,4 +819,62 @@ export const userVerificationStatusDb: Record<string, boolean> = {
   "client@example.com": false
 };
 
+export interface FallbackPackage {
+  id: string;
+  serviceId: string;
+  name: string;
+  price: number;
+  discountPrice?: number | null;
+  gstPercent: number;
+  features: string[];
+  displayOrder: number;
+  cta?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  isDeleted?: boolean;
+}
+
+export const packagesDb: FallbackPackage[] = [
+  {
+    id: "pkg-1",
+    serviceId: "srv-pvt-ltd", // or standard service id
+    name: "Standard Package",
+    price: 9999,
+    discountPrice: 7999,
+    gstPercent: 18,
+    features: [
+      "2 Digital Signature Certificates (DSC)",
+      "Director Identification Numbers (DIN)",
+      "Name Approval & Filing",
+      "Drafting MoA & AoA",
+      "PAN & TAN Registration"
+    ],
+    displayOrder: 1,
+    cta: "Buy Standard Package",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isDeleted: false
+  },
+  {
+    id: "pkg-2",
+    serviceId: "srv-pvt-ltd",
+    name: "Premium Growth Package",
+    price: 15999,
+    discountPrice: 12999,
+    gstPercent: 18,
+    features: [
+      "All Standard Package features",
+      "GST Registration",
+      "MSME (Udyam) Certificate",
+      "Corporate Bank Account Opening Assistance",
+      "1-Year Compliance Calendar & Consultation"
+    ],
+    displayOrder: 2,
+    cta: "Upgrade to Premium",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isDeleted: false
+  }
+];
+
 

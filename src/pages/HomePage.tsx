@@ -158,52 +158,6 @@ const stats = [
   { label: "Trademarks Protected", count: "5,500+", icon: Shield },
 ];
 
-const packages = [
-  {
-    name: "Private Limited Startup Pack",
-    price: "₹4,999",
-    billing: "excluding government stamp duty",
-    popular: true,
-    features: [
-      "2 Digital Signature Certificates (DSC)",
-      "2 Director Identification Numbers (DIN)",
-      "Name Approval application draft",
-      "Spice+ Form Filing with MCA",
-      "Corporate PAN & TAN Allocation",
-      "Standard Memorandum & Articles drafting",
-      "EPFO & ESIC registration codes",
-    ],
-  },
-  {
-    name: "GST Registration Package",
-    price: "₹999",
-    billing: "All inclusive setup fee",
-    popular: false,
-    features: [
-      "Expert verification of rent/utility proof",
-      "GST application preparation",
-      "Filing on the official GST Common Portal",
-      "Handling official clarification queries",
-      "GST Registration Certificate delivery",
-      "Initial GST return filing handbook",
-    ],
-  },
-  {
-    name: "Trademark Application Pack",
-    price: "₹1,999",
-    billing: "plus official government fees",
-    popular: false,
-    features: [
-      "Comprehensive trademark search report",
-      "Accurate trademark class selection",
-      "Filing Form TM-A with IP India",
-      "Use of 'TM' symbol allocation",
-      "Regular tracking updates",
-      "Initial attorney drafting and verification",
-    ],
-  },
-];
-
 // Testimonial CMS values are fetched dynamically from the backend and initialized using the admin store default list.
 
 const faqs = [
@@ -289,6 +243,8 @@ export default function HomePage() {
   const [textCarouselIndex, setTextCarouselIndex] = useState(0);
   const [logosList, setLogosList] = useState<any[]>([]);
   const [dynamicTestimonials, setDynamicTestimonials] = useState<any[]>(initialTestimonials);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [isLoadingPackages, setIsLoadingPackages] = useState(true);
 
   // Load client logos and testimonials from CMS on mount
   useEffect(() => {
@@ -305,6 +261,24 @@ export default function HomePage() {
         }
       })
       .catch(err => console.error("Failed to load CMS config on homepage", err));
+
+    fetch("/api/cms/packages")
+      .then(res => res.json())
+      .then(res => {
+        if (res.success && res.data) {
+          const sorted = [...res.data].sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+          setPackages(sorted);
+        } else {
+          setPackages([]);
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load packages on homepage", err);
+        setPackages([]);
+      })
+      .finally(() => {
+        setIsLoadingPackages(false);
+      });
   }, []);
 
   const videoTestimonials = dynamicTestimonials.filter(t => t.videoUrl && t.videoUrl.trim() !== "" && t.status !== "Draft");
@@ -511,19 +485,26 @@ export default function HomePage() {
     setIsProcessingBuyNow(true);
 
     try {
-      // Extract price digits
-      const priceDigits = selectedPackage.price.replace(/[^\d]/g, "");
-      const numericPrice = parseInt(priceDigits, 10);
+      // Extract price digits dynamically
+      let numericPrice = 0;
+      if (typeof selectedPackage.price === "number") {
+        numericPrice = selectedPackage.discountPrice || selectedPackage.price;
+      } else if (typeof selectedPackage.price === "string") {
+        const priceDigits = selectedPackage.price.replace(/[^\d]/g, "");
+        numericPrice = parseInt(priceDigits, 10);
+      }
 
-      let associatedService = "Company Setup";
-      let packageId = "pkg_pvt_ltd";
+      let associatedService = selectedPackage.serviceId || "Company Setup";
+      let packageId = selectedPackage.id || "pkg_pvt_ltd";
 
-      if (selectedPackage.name.toLowerCase().includes("gst")) {
-        associatedService = "GST Registration";
-        packageId = "pkg_gst_reg";
-      } else if (selectedPackage.name.toLowerCase().includes("trademark")) {
-        associatedService = "Trademark Registration";
-        packageId = "pkg_tm_app";
+      if (!selectedPackage.serviceId) {
+        if (selectedPackage.name.toLowerCase().includes("gst")) {
+          associatedService = "GST Registration";
+          packageId = "pkg_gst_reg";
+        } else if (selectedPackage.name.toLowerCase().includes("trademark")) {
+          associatedService = "Trademark Registration";
+          packageId = "pkg_tm_app";
+        }
       }
 
       // Create Razorpay public order
@@ -1273,69 +1254,112 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto" id="pricing-packages-grid">
-            {packages.map((pkg, idx) => (
-              <div
-                key={idx}
-                className={`relative flex flex-col rounded-2xl border bg-white p-6 md:p-8 space-y-6 transition-all hover:shadow-xl ${
-                  pkg.popular
-                    ? "border-brand-secondary-500 shadow-md ring-1 ring-brand-secondary-500/20"
-                    : "border-slate-200/80 shadow-sm"
-                }`}
-                id={`package-card-${idx}`}
-              >
-                {pkg.popular && (
-                  <span className="absolute top-0 right-8 -translate-y-1/2 bg-brand-secondary-500 text-white text-[10px] font-bold font-mono tracking-wider uppercase px-3 py-1 rounded-full shadow-sm">
-                    Most Popular
-                  </span>
-                )}
-
-                <div className="space-y-2">
-                  <h4 className="text-lg font-bold font-display text-brand-primary-950 leading-tight">
-                    {pkg.name}
-                  </h4>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl font-display font-extrabold text-slate-900">{pkg.price}</span>
-                    <span className="text-[11px] text-slate-400 font-mono">service fee</span>
+          {isLoadingPackages && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto" id="packages-loading-state">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="border border-slate-200/80 rounded-2xl bg-white p-6 md:p-8 space-y-6 animate-pulse">
+                  <div className="h-5 bg-slate-100 rounded w-2/3" />
+                  <div className="h-8 bg-slate-100 rounded w-1/3" />
+                  <div className="h-4 bg-slate-100 rounded w-1/2" />
+                  <div className="space-y-2 pt-4">
+                    <div className="h-3 bg-slate-100 rounded w-full" />
+                    <div className="h-3 bg-slate-100 rounded w-full" />
+                    <div className="h-3 bg-slate-100 rounded w-5/6" />
                   </div>
-                  <p className="text-[10px] text-slate-400 font-mono uppercase italic">{pkg.billing}</p>
                 </div>
+              ))}
+            </div>
+          )}
 
-                {/* Features Checklist */}
-                <div className="flex-1 space-y-4">
-                  <div className="h-px bg-slate-100" />
-                  <p className="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase">Inclusions</p>
-                  <ul className="space-y-3">
-                    {pkg.features.map((feature, fIdx) => (
-                      <li key={fIdx} className="flex items-start gap-2.5 text-xs text-slate-600 font-sans">
-                        <Check className="h-4 w-4 text-brand-secondary-500 shrink-0 mt-0.5" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+          {!isLoadingPackages && packages.length === 0 && (
+            <div className="text-center py-12 max-w-md mx-auto" id="packages-empty-state">
+              <p className="text-sm text-slate-500 font-medium">No packages currently available.</p>
+            </div>
+          )}
 
-                <div className="pt-4 border-t border-slate-50 space-y-2">
-                  <Button
-                    variant={pkg.popular ? "secondary" : "primary"}
-                    className="w-full font-bold text-xs py-2.5"
-                    onClick={() => handleBuyNowClick(pkg)}
-                    id={`package-buy-now-${idx}`}
+          {!isLoadingPackages && packages.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto" id="pricing-packages-grid">
+              {packages.map((pkg, idx) => {
+                const isPopular = pkg.name.toLowerCase().includes("premium") || pkg.name.toLowerCase().includes("growth") || idx === 1;
+                return (
+                  <div
+                    key={pkg.id || idx}
+                    className={`relative flex flex-col rounded-2xl border bg-white p-6 md:p-8 space-y-6 transition-all hover:shadow-xl ${
+                      isPopular
+                        ? "border-brand-secondary-500 shadow-md ring-1 ring-brand-secondary-500/20"
+                        : "border-slate-200/80 shadow-sm"
+                    }`}
+                    id={`package-card-${idx}`}
                   >
-                    Buy Now
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full font-bold text-xs py-2"
-                    onClick={() => handleEnquiryClick(pkg.name)}
-                    id={`package-enquiry-${idx}`}
-                  >
-                    Enquire About Pack
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
+                    {isPopular && (
+                      <span className="absolute top-0 right-8 -translate-y-1/2 bg-brand-secondary-500 text-white text-[10px] font-bold font-mono tracking-wider uppercase px-3 py-1 rounded-full shadow-sm">
+                        Most Popular
+                      </span>
+                    )}
+
+                    <div className="space-y-2">
+                      <h4 className="text-lg font-bold font-display text-brand-primary-950 leading-tight">
+                        {pkg.name}
+                      </h4>
+                      <div className="flex items-baseline gap-1.5 flex-wrap">
+                        {pkg.discountPrice ? (
+                          <>
+                            <span className="text-3xl font-display font-extrabold text-slate-900">
+                              ₹{pkg.discountPrice.toLocaleString("en-IN")}
+                            </span>
+                            <span className="text-sm text-slate-400 line-through font-mono">
+                              ₹{pkg.price.toLocaleString("en-IN")}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-3xl font-display font-extrabold text-slate-900">
+                            ₹{pkg.price.toLocaleString("en-IN")}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-slate-400 font-mono">service fee</span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-mono uppercase italic">
+                        +{pkg.gstPercent}% GST | {pkg.cta || "All inclusive setup fee"}
+                      </p>
+                    </div>
+
+                    {/* Features Checklist */}
+                    <div className="flex-1 space-y-4">
+                      <div className="h-px bg-slate-100" />
+                      <p className="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase">Inclusions</p>
+                      <ul className="space-y-3">
+                        {pkg.features.map((feature: string, fIdx: number) => (
+                          <li key={fIdx} className="flex items-start gap-2.5 text-xs text-slate-600 font-sans">
+                            <Check className="h-4 w-4 text-brand-secondary-500 shrink-0 mt-0.5" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-50 space-y-2">
+                      <Button
+                        variant={isPopular ? "secondary" : "primary"}
+                        className="w-full font-bold text-xs py-2.5"
+                        onClick={() => handleBuyNowClick(pkg)}
+                        id={`package-buy-now-${idx}`}
+                      >
+                        Buy Now
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full font-bold text-xs py-2"
+                        onClick={() => handleEnquiryClick(pkg.name)}
+                        id={`package-enquiry-${idx}`}
+                      >
+                        Enquire About Pack
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
         </div>
       </section>

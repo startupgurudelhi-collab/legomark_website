@@ -167,7 +167,23 @@ export default function AdminPage() {
   const [contactInfo, setContactInfo] = useState<CmsContactInfo>(() => getStoredState("contact", initialCmsContactInfo));
   const [headerMenu, setHeaderMenu] = useState<MenuItem[]>(() => getStoredState("menu", initialHeaderMenu));
   const [adminSettings, setAdminSettings] = useState<SettingsType>(() => getStoredState("settings", initialAdminSettings));
-  const [packages, setPackages] = useState<AdminPackage[]>(() => getStoredState("packages", initialPackages));
+  const [packages, setPackages] = useState<AdminPackage[]>([]);
+
+  // Load packages from server on mount
+  useEffect(() => {
+    async function fetchPackages() {
+      try {
+        const res = await fetch("/api/cms/packages");
+        const json = await res.json();
+        if (json.success && json.data) {
+          setPackages(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to load packages in Admin Console", err);
+      }
+    }
+    fetchPackages();
+  }, []);
 
   // Connect actual servicesData (from Dynamic Service Engine) to CMS!
   const [servicesList, setServicesList] = useState<ServiceData[]>(() => {
@@ -237,7 +253,6 @@ export default function AdminPage() {
   useEffect(() => { setStoredState("contact", contactInfo); }, [contactInfo]);
   useEffect(() => { setStoredState("menu", headerMenu); }, [headerMenu]);
   useEffect(() => { setStoredState("settings", adminSettings); }, [adminSettings]);
-  useEffect(() => { setStoredState("packages", packages); }, [packages]);
 
   // Robust server-side syncer helpers for CMS modules
   const handleUpdateTestimonials = async (updated: AdminTestimonial[]) => {

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { UserRepository, LeadRepository, OrderRepository, BlogRepository, TaskRepository, FinancialRepository, SupportRepository, NotificationsRepository, CmsConfigRepository } from "../repositories/dataRepository.js";
+import { UserRepository, LeadRepository, OrderRepository, BlogRepository, TaskRepository, FinancialRepository, SupportRepository, NotificationsRepository, CmsConfigRepository, PackageRepository } from "../repositories/dataRepository.js";
 import { comparePassword, hashPassword } from "../utils/password.js";
 import { generateToken } from "../utils/jwt.js";
 import { logger } from "../utils/logger.js";
@@ -540,3 +540,115 @@ export const CmsConfigService = {
     return CmsConfigRepository.addMedia(file);
   }
 };
+
+// ==========================================
+// PACKAGES CMS SERVICE
+// ==========================================
+export const PackagesService = {
+  async listAll() {
+    return PackageRepository.getAll();
+  },
+
+  async create(pkgData: any) {
+    logger.info(`[Packages CMS] Creating new package: ${pkgData.name}`);
+    
+    // Validation
+    if (!pkgData.serviceId || typeof pkgData.serviceId !== "string" || !pkgData.serviceId.trim()) {
+      throw new Error("Validation Failed: Associated Service Name (serviceId) is required.");
+    }
+    if (!pkgData.name || typeof pkgData.name !== "string" || !pkgData.name.trim()) {
+      throw new Error("Validation Failed: Package name is required.");
+    }
+    if (pkgData.price === undefined || pkgData.price === null || isNaN(Number(pkgData.price)) || Number(pkgData.price) < 0) {
+      throw new Error("Validation Failed: Package price must be a non-negative number.");
+    }
+    if (pkgData.discountPrice !== undefined && pkgData.discountPrice !== null && pkgData.discountPrice !== "" && (isNaN(Number(pkgData.discountPrice)) || Number(pkgData.discountPrice) < 0)) {
+      throw new Error("Validation Failed: Package discount price must be a non-negative number.");
+    }
+
+    const id = pkgData.id || `pkg-${Math.random().toString(36).substring(2, 8)}`;
+    
+    let features: string[] = [];
+    if (Array.isArray(pkgData.features)) {
+      features = pkgData.features;
+    } else if (typeof pkgData.features === "string") {
+      features = pkgData.features.split("\n").map((f: string) => f.trim()).filter(Boolean);
+    }
+
+    const freshPackage = {
+      id,
+      serviceId: pkgData.serviceId,
+      name: pkgData.name,
+      price: Number(pkgData.price),
+      discountPrice: pkgData.discountPrice !== undefined && pkgData.discountPrice !== null && pkgData.discountPrice !== "" ? Number(pkgData.discountPrice) : null,
+      gstPercent: pkgData.gstPercent !== undefined && pkgData.gstPercent !== null && pkgData.gstPercent !== "" ? Number(pkgData.gstPercent) : 18,
+      features,
+      displayOrder: pkgData.displayOrder !== undefined && pkgData.displayOrder !== null && pkgData.displayOrder !== "" ? Number(pkgData.displayOrder) : 0,
+      cta: pkgData.cta || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isDeleted: false
+    };
+
+    return PackageRepository.create(freshPackage);
+  },
+
+  async update(id: string, updates: any) {
+    logger.info(`[Packages CMS] Updating package: ${id}`);
+    
+    // Validation
+    if (updates.serviceId !== undefined && (!updates.serviceId || typeof updates.serviceId !== "string" || !updates.serviceId.trim())) {
+      throw new Error("Validation Failed: Associated Service Name (serviceId) is required.");
+    }
+    if (updates.name !== undefined && (!updates.name || typeof updates.name !== "string" || !updates.name.trim())) {
+      throw new Error("Validation Failed: Package name is required.");
+    }
+    if (updates.price !== undefined && (updates.price === null || isNaN(Number(updates.price)) || Number(updates.price) < 0)) {
+      throw new Error("Validation Failed: Package price must be a non-negative number.");
+    }
+    if (updates.discountPrice !== undefined && updates.discountPrice !== null && updates.discountPrice !== "" && (isNaN(Number(updates.discountPrice)) || Number(updates.discountPrice) < 0)) {
+      throw new Error("Validation Failed: Package discount price must be a non-negative number.");
+    }
+
+    const normalizedUpdates: any = {
+      updatedAt: new Date().toISOString()
+    };
+
+    if (updates.serviceId !== undefined) normalizedUpdates.serviceId = updates.serviceId;
+    if (updates.name !== undefined) normalizedUpdates.name = updates.name;
+    if (updates.price !== undefined) normalizedUpdates.price = Number(updates.price);
+    if (updates.discountPrice !== undefined) {
+      normalizedUpdates.discountPrice = updates.discountPrice !== null && updates.discountPrice !== "" ? Number(updates.discountPrice) : null;
+    }
+    if (updates.gstPercent !== undefined) {
+      normalizedUpdates.gstPercent = updates.gstPercent !== null && updates.gstPercent !== "" ? Number(updates.gstPercent) : 18;
+    }
+    if (updates.features !== undefined) {
+      if (Array.isArray(updates.features)) {
+        normalizedUpdates.features = updates.features;
+      } else if (typeof updates.features === "string") {
+        normalizedUpdates.features = updates.features.split("\n").map((f: string) => f.trim()).filter(Boolean);
+      }
+    }
+    if (updates.displayOrder !== undefined) {
+      normalizedUpdates.displayOrder = updates.displayOrder !== null && updates.displayOrder !== "" ? Number(updates.displayOrder) : 0;
+    }
+    if (updates.cta !== undefined) normalizedUpdates.cta = updates.cta || null;
+
+    const result = await PackageRepository.update(id, normalizedUpdates);
+    if (!result) {
+      throw new Error(`Package with ID ${id} not found.`);
+    }
+    return result;
+  },
+
+  async delete(id: string) {
+    logger.info(`[Packages CMS] Deleting package: ${id}`);
+    const result = await PackageRepository.delete(id);
+    if (!result) {
+      throw new Error(`Package with ID ${id} not found.`);
+    }
+    return true;
+  }
+};
+

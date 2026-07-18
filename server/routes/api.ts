@@ -37,7 +37,8 @@ import {
   BlogsController, 
   BillingController, 
   SupportController, 
-  CmsConfigController 
+  CmsConfigController,
+  PackagesController
 } from "../controllers/dataController.js";
 import { EmailController } from "../controllers/emailController.js";
 import { PaymentController } from "../controllers/paymentController.js";
@@ -114,6 +115,12 @@ router.put("/cms/faqs", requireAuth, CmsConfigController.updateFaqs);
 router.post("/cms/media", requireAuth, CmsConfigController.uploadMedia);
 router.post("/cms/upload-video", requireAuth, upload.single("video"), CmsConfigController.uploadVideoFile);
 router.post("/cms/upload-thumbnail", requireAuth, upload.single("thumbnail"), CmsConfigController.uploadThumbnailFile);
+
+// Packages CMS Endpoints
+router.get("/cms/packages", PackagesController.list);
+router.post("/cms/packages", requireAuth, PackagesController.create);
+router.put("/cms/packages/:id", requireAuth, PackagesController.update);
+router.delete("/cms/packages/:id", requireAuth, PackagesController.delete);
 
 // Email Infrastructure Endpoints
 router.get("/email/status", requireAuth, EmailController.getStatus);
