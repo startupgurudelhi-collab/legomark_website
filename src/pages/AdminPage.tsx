@@ -94,7 +94,7 @@ import { getEffectiveCategories, getEffectiveSubcategories } from "../data/categ
 const initialPackages: AdminPackage[] = [
   {
     id: "pkg-1",
-    serviceId: "Private Limited Company",
+    serviceId: "pvt-ltd",
     name: "Standard Package",
     price: 9999,
     discountPrice: 7999,
@@ -111,7 +111,7 @@ const initialPackages: AdminPackage[] = [
   },
   {
     id: "pkg-2",
-    serviceId: "Private Limited Company",
+    serviceId: "pvt-ltd",
     name: "Premium Growth Package",
     price: 15999,
     discountPrice: 12999,

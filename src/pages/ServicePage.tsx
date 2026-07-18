@@ -113,6 +113,127 @@ export default function ServicePage() {
   // Bundle submission state
   const [isBundleSubmitting, setIsBundleSubmitting] = useState(false);
 
+  // Packages CMS state
+  const [allPackages, setAllPackages] = useState<any[]>([]);
+  const [cmsPackages, setCmsPackages] = useState<any[]>([]);
+  const [isLoadingPackages, setIsLoadingPackages] = useState(true);
+
+  // Fetch packages from Packages CMS
+  useEffect(() => {
+    if (!service) return;
+    setIsLoadingPackages(true);
+    fetch("/api/cms/packages")
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success && Array.isArray(res.data)) {
+          // Support legacy records: resolve service name to Service ID once and save back
+          let hasLegacy = false;
+          const mapped = res.data.map((pkg: any) => {
+            const matchingService = (services || []).find(
+              (s: any) =>
+                s.serviceName.toLowerCase() === pkg.serviceId.toLowerCase() ||
+                s.id.toLowerCase() === pkg.serviceId.toLowerCase() ||
+                (pkg.serviceId.toLowerCase() === "srv-pvt-ltd" && s.id === "pvt-ltd")
+            );
+            if (matchingService && matchingService.id !== pkg.serviceId) {
+              hasLegacy = true;
+              const token = localStorage.getItem("efilingg_token");
+              const headers: any = { "Content-Type": "application/json" };
+              if (token) headers["Authorization"] = `Bearer ${token}`;
+
+              fetch(`/api/cms/packages/${pkg.id}`, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({
+                  name: pkg.name,
+                  serviceId: matchingService.id,
+                  price: Number(pkg.price),
+                  discountPrice: pkg.discountPrice ? Number(pkg.discountPrice) : null,
+                  gstPercent: Number(pkg.gstPercent),
+                  displayOrder: Number(pkg.displayOrder),
+                  features: pkg.features,
+                  cta: pkg.cta || null
+                })
+              })
+              .then((r) => r.json())
+              .then((result) => {
+                if (result.success) {
+                  console.log(`Auto-migrated legacy package in ServicePage: ${pkg.id} to service ID ${matchingService.id}`);
+                }
+              })
+              .catch((err) => console.error("Failed to migrate legacy package in ServicePage:", err));
+
+              return { ...pkg, serviceId: matchingService.id };
+            }
+            return pkg;
+          });
+
+          setAllPackages(mapped);
+
+          // Render ONLY the Packages CMS records for the current service (strictly matching service.id)
+          const filtered = mapped.filter((pkg: any) => {
+            return (
+              pkg.serviceId === service.id ||
+              (pkg.serviceId && pkg.serviceId.toLowerCase() === service.id.toLowerCase())
+            );
+          }).sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+
+          setCmsPackages(filtered);
+        } else {
+          setAllPackages([]);
+          setCmsPackages([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load CMS packages on ServicePage:", err);
+        setAllPackages([]);
+        setCmsPackages([]);
+      })
+      .finally(() => {
+        setIsLoadingPackages(false);
+      });
+  }, [service?.id, service?.serviceName, services]);
+
+  const getPrimaryServicePrice = (): number => {
+    if (cmsPackages.length > 0) {
+      return cmsPackages[0]?.discountPrice || cmsPackages[0]?.price;
+    }
+    const rawVal = service?.packages && service.packages.length > 0
+      ? (service.packages[0]?.discountPrice || service.packages[0]?.price)
+      : (service?.professionalFees || 0);
+
+    if (typeof rawVal === "number") return rawVal;
+    if (typeof rawVal === "string") {
+      const cleaned = rawVal.replace(/[^\d]/g, "");
+      return cleaned ? parseInt(cleaned, 10) : 0;
+    }
+    return 0;
+  };
+
+  const getRelatedServicePrice = (rel: any): number => {
+    const relPkgs = allPackages.filter((pkg: any) => {
+      return (
+        pkg.serviceId === rel.id ||
+        (pkg.serviceId && pkg.serviceId.toLowerCase() === rel.id.toLowerCase())
+      );
+    }).sort((a: any, b: any) => (a.displayOrder || 0) - (b.displayOrder || 0));
+
+    if (relPkgs.length > 0) {
+      return relPkgs[0]?.discountPrice || relPkgs[0]?.price;
+    }
+
+    const rawVal = rel.packages && rel.packages.length > 0
+      ? (rel.packages[0]?.discountPrice || rel.packages[0]?.price)
+      : (rel.professionalFees || 0);
+
+    if (typeof rawVal === "number") return rawVal;
+    if (typeof rawVal === "string") {
+      const cleaned = rawVal.replace(/[^\d]/g, "");
+      return cleaned ? parseInt(cleaned, 10) : 0;
+    }
+    return 0;
+  };
+
   // Scroll listener for sticky bar
   useEffect(() => {
     const handleScroll = () => {
@@ -269,11 +390,11 @@ export default function ServicePage() {
     const activeAddons = relatedServicesList.filter(rel => selectedAddons[rel.id]);
     const addonNames = activeAddons.map(rel => rel.serviceName).join(", ");
 
-    const basePrice = service ? (service.packages[0]?.discountPrice || service.packages[0]?.price || service.professionalFees) : 0;
+    const basePrice = getPrimaryServicePrice();
     const addonsPrice = relatedServicesList
       .filter(rel => selectedAddons[rel.id])
-      .reduce((sum, rel) => sum + (rel.packages[0]?.discountPrice || rel.packages[0]?.price || 1999), 0);
-    const subtotal = Number(basePrice) + addonsPrice;
+      .reduce((sum, rel) => sum + getRelatedServicePrice(rel), 0);
+    const subtotal = basePrice + addonsPrice;
     const discount = addonsPrice > 0 ? Math.round(subtotal * 0.1) : 0;
     const estimatedPrice = subtotal - discount + govtFeesValue;
     
@@ -625,10 +746,7 @@ export default function ServicePage() {
                   <Coins className="h-5 w-5 text-brand-secondary-500 shrink-0 mb-2" />
                   <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold">Starting Price</p>
                   <p className="text-xs sm:text-sm font-bold text-white mt-0.5">
-                    ₹{(() => {
-                      const basePrice = service.packages[0]?.discountPrice || service.packages[0]?.price || service.professionalFees;
-                      return typeof basePrice === "number" ? basePrice.toLocaleString("en-IN") : basePrice;
-                    })()}*
+                    ₹{getPrimaryServicePrice().toLocaleString("en-IN")}*
                   </p>
                 </div>
 
@@ -1216,113 +1334,129 @@ export default function ServicePage() {
             </p>
           </div>
 
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch`}>
-            {service.packages?.map((pkg, idx) => {
-              // Highlight the recommended package (usually the premium startup suite, or second package)
-              const isRecommended = service.packages.length > 1 ? idx === 1 : true;
-              const displayPrice = pkg.discountPrice || pkg.price;
-              const hasDiscount = !!pkg.discountPrice;
-              const gstValue = pkg.gstPercent ? Math.round(displayPrice * (pkg.gstPercent / 100)) : 0;
-              const totalPriceEstimated = displayPrice + gstValue + govtFeesValue;
-
-              return (
-                <div
-                  key={idx}
-                  className={`rounded-3xl p-6 md:p-10 border-2 flex flex-col justify-between transition-all duration-300 relative ${
-                    isRecommended
-                      ? "border-brand-primary-950 bg-slate-950 text-white shadow-xl shadow-brand-primary-950/10"
-                      : "border-slate-200 hover:border-slate-300 bg-slate-50 text-slate-800"
-                  }`}
-                >
-                  {isRecommended && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand-secondary-500 to-amber-500 text-brand-primary-950 font-black font-mono text-[10px] uppercase px-4 py-1.5 rounded-full shadow-md tracking-wider">
-                      ★ Recommended Package
+          <div className={`grid ${cmsPackages.length > 2 || (service?.packages && service.packages.length > 2) ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-6xl" : "grid-cols-1 md:grid-cols-2 lg:grid-cols-2 max-w-5xl"} gap-8 mx-auto items-stretch`}>
+            {isLoadingPackages ? (
+              <div className="col-span-full py-12 text-center text-slate-400 font-mono text-xs">
+                Loading packages from CMS...
+              </div>
+            ) : (
+              (() => {
+                const displayPackages = cmsPackages.length > 0 ? cmsPackages : (service?.packages || []);
+                if (displayPackages.length === 0) {
+                  return (
+                    <div className="col-span-full py-12 text-center text-slate-400 font-mono text-xs">
+                      No packages configured for this service.
                     </div>
-                  )}
+                  );
+                }
+                return displayPackages.map((pkg, idx) => {
+                  // Highlight the recommended package (usually the premium startup suite, or second package)
+                  const isRecommended = displayPackages.length > 1 ? idx === 1 : true;
+                  const displayPrice = pkg.discountPrice || pkg.price;
+                  const hasDiscount = !!pkg.discountPrice;
+                  const gstValue = pkg.gstPercent ? Math.round(displayPrice * (pkg.gstPercent / 100)) : 0;
+                  const totalPriceEstimated = displayPrice + gstValue + govtFeesValue;
 
-                  <div className="space-y-6">
-                    {/* Header */}
-                    <div className="border-b border-slate-200/20 pb-6 space-y-2">
-                      <h4 className={`text-xl md:text-2xl font-display font-extrabold ${isRecommended ? "text-white" : "text-brand-primary-950"}`}>
-                        {pkg.name}
-                      </h4>
-                      <p className={`text-xs ${isRecommended ? "text-slate-400" : "text-slate-500"} font-semibold`}>
-                        Complete package inclusions with no hidden advisory charges.
-                      </p>
-                    </div>
-
-                    {/* Detailed Fee Breakdown */}
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span className={isRecommended ? "text-slate-400" : "text-slate-500"}>Professional Fees:</span>
-                        <div className="flex items-center gap-1.5 font-bold">
-                          {hasDiscount && (
-                            <span className="text-[10px] text-slate-500 line-through">₹{pkg.price.toLocaleString("en-IN")}</span>
-                          )}
-                          <span>₹{displayPrice.toLocaleString("en-IN")}</span>
-                        </div>
-                      </div>
-
-                      {pkg.gstPercent && (
-                        <div className="flex justify-between text-xs font-semibold">
-                          <span className={isRecommended ? "text-slate-400" : "text-slate-500"}>GST ({pkg.gstPercent}%):</span>
-                          <span className="font-bold">₹{gstValue.toLocaleString("en-IN")}</span>
+                  return (
+                    <div
+                      key={idx}
+                      className={`rounded-3xl p-6 md:p-10 border-2 flex flex-col justify-between transition-all duration-300 relative ${
+                        isRecommended
+                          ? "border-brand-primary-950 bg-slate-950 text-white shadow-xl shadow-brand-primary-950/10"
+                          : "border-slate-200 hover:border-slate-300 bg-slate-50 text-slate-800"
+                      }`}
+                    >
+                      {isRecommended && (
+                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-brand-secondary-500 to-amber-500 text-brand-primary-950 font-black font-mono text-[10px] uppercase px-4 py-1.5 rounded-full shadow-md tracking-wider">
+                          ★ Recommended Package
                         </div>
                       )}
 
-                      <div className="flex justify-between text-xs font-semibold">
-                        <span className={isRecommended ? "text-slate-400" : "text-slate-500"}>Government Fees:</span>
-                        <span className="font-bold">{service.governmentFees || "NIL"}</span>
-                      </div>
-
-                      {/* Total Price Itemized Breakdown */}
-                      <div className={`flex justify-between items-baseline pt-4 border-t ${isRecommended ? "border-slate-800" : "border-slate-200"} mt-2`}>
-                        <span className={`text-xs font-black ${isRecommended ? "text-brand-secondary-400" : "text-brand-primary-950"}`}>Total Price (Est):</span>
-                        <div className="text-right">
-                          <span className="text-2xl md:text-3xl font-display font-black">
-                            ₹{totalPriceEstimated.toLocaleString("en-IN")}
-                          </span>
-                          <p className={`text-[9px] font-mono mt-0.5 ${isRecommended ? "text-slate-500" : "text-slate-400"} font-semibold`}>
-                            (Inclusive of government fee and taxes)
+                      <div className="space-y-6">
+                        {/* Header */}
+                        <div className="border-b border-slate-200/20 pb-6 space-y-2">
+                          <h4 className={`text-xl md:text-2xl font-display font-extrabold ${isRecommended ? "text-white" : "text-brand-primary-950"}`}>
+                            {pkg.name}
+                          </h4>
+                          <p className={`text-xs ${isRecommended ? "text-slate-400" : "text-slate-500"} font-semibold`}>
+                            Complete package inclusions with no hidden advisory charges.
                           </p>
                         </div>
+
+                        {/* Detailed Fee Breakdown */}
+                        <div className="space-y-3">
+                          <div className="flex justify-between text-xs font-semibold">
+                            <span className={isRecommended ? "text-slate-400" : "text-slate-500"}>Professional Fees:</span>
+                            <div className="flex items-center gap-1.5 font-bold">
+                              {hasDiscount && (
+                                <span className="text-[10px] text-slate-500 line-through">₹{pkg.price.toLocaleString("en-IN")}</span>
+                              )}
+                              <span>₹{displayPrice.toLocaleString("en-IN")}</span>
+                            </div>
+                          </div>
+
+                          {pkg.gstPercent && (
+                            <div className="flex justify-between text-xs font-semibold">
+                              <span className={isRecommended ? "text-slate-400" : "text-slate-500"}>GST ({pkg.gstPercent}%):</span>
+                              <span className="font-bold">₹{gstValue.toLocaleString("en-IN")}</span>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between text-xs font-semibold">
+                            <span className={isRecommended ? "text-slate-400" : "text-slate-500"}>Government Fees:</span>
+                            <span className="font-bold">{service.governmentFees || "NIL"}</span>
+                          </div>
+
+                          {/* Total Price Itemized Breakdown */}
+                          <div className={`flex justify-between items-baseline pt-4 border-t ${isRecommended ? "border-slate-800" : "border-slate-200"} mt-2`}>
+                            <span className={`text-xs font-black ${isRecommended ? "text-brand-secondary-400" : "text-brand-primary-950"}`}>Total Price (Est):</span>
+                            <div className="text-right">
+                              <span className="text-2xl md:text-3xl font-display font-black">
+                                ₹{totalPriceEstimated.toLocaleString("en-IN")}
+                              </span>
+                              <p className={`text-[9px] font-mono mt-0.5 ${isRecommended ? "text-slate-500" : "text-slate-400"} font-semibold`}>
+                                (Inclusive of government fee and taxes)
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Inclusions features list */}
+                        <div className={`pt-4 border-t ${isRecommended ? "border-slate-800" : "border-slate-200"}`}>
+                          <p className={`text-[10px] font-mono font-bold uppercase tracking-wider mb-4 ${isRecommended ? "text-brand-secondary-400" : "text-slate-400"}`}>
+                            Package Inclusions:
+                          </p>
+                          <ul className="space-y-3">
+                            {(Array.isArray(pkg.features) ? pkg.features : []).map((feature: string, fIdx: number) => (
+                              <li key={fIdx} className="flex gap-2.5 items-start">
+                                <Check className={`h-4 w-4 shrink-0 mt-0.5 ${isRecommended ? "text-brand-secondary-400" : "text-brand-primary-950"}`} />
+                                <span className={`text-xs md:text-sm font-semibold leading-relaxed ${isRecommended ? "text-slate-300" : "text-slate-600"}`}>
+                                  {feature}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+
+                      <div className="pt-8">
+                        <button
+                          onClick={scrollToEnquiry}
+                          className={`w-full py-4 text-xs font-black font-mono uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer ${
+                            isRecommended
+                              ? "bg-brand-secondary-500 hover:bg-brand-secondary-600 text-brand-primary-950 shadow-lg shadow-brand-secondary-500/20"
+                              : "bg-brand-primary-950 hover:bg-slate-800 text-white shadow-md"
+                          }`}
+                        >
+                          <span>{pkg.cta || "Enquire Now"}</span>
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
-
-                    {/* Inclusions features list */}
-                    <div className={`pt-4 border-t ${isRecommended ? "border-slate-800" : "border-slate-200"}`}>
-                      <p className={`text-[10px] font-mono font-bold uppercase tracking-wider mb-4 ${isRecommended ? "text-brand-secondary-400" : "text-slate-400"}`}>
-                        Package Inclusions:
-                      </p>
-                      <ul className="space-y-3">
-                        {pkg.features.map((feature, fIdx) => (
-                          <li key={fIdx} className="flex gap-2.5 items-start">
-                            <Check className={`h-4 w-4 shrink-0 mt-0.5 ${isRecommended ? "text-brand-secondary-400" : "text-brand-primary-950"}`} />
-                            <span className={`text-xs md:text-sm font-semibold leading-relaxed ${isRecommended ? "text-slate-300" : "text-slate-600"}`}>
-                              {feature}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="pt-8">
-                    <button
-                      onClick={scrollToEnquiry}
-                      className={`w-full py-4 text-xs font-black font-mono uppercase tracking-widest rounded-xl transition-all duration-300 hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer ${
-                        isRecommended
-                          ? "bg-brand-secondary-500 hover:bg-brand-secondary-600 text-brand-primary-950 shadow-lg shadow-brand-secondary-500/20"
-                          : "bg-brand-primary-950 hover:bg-slate-800 text-white shadow-md"
-                      }`}
-                    >
-                      <span>{pkg.cta || "Enquire Now"}</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                });
+              })()
+            )}
           </div>
         </div>
       </section>
@@ -1405,7 +1539,7 @@ export default function ServicePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {relatedServicesList.map((rel) => {
                     const isChecked = !!selectedAddons[rel.id];
-                    const relPrice = rel.packages[0]?.discountPrice || rel.packages[0]?.price || 1999;
+                    const relPrice = getRelatedServicePrice(rel);
                     
                     const relCat = categories.find(c => c.id === rel.categoryId) || 
                                    categories.find(c => c.urlSlug === rel.categorySlug) ||
@@ -1477,10 +1611,7 @@ export default function ServicePage() {
                         <h5 className="text-xs font-black text-white mt-1.5">{service.serviceName}</h5>
                       </div>
                       <span className="text-xs font-mono font-bold text-slate-200">
-                        ₹{(() => {
-                          const basePrice = service.packages[0]?.discountPrice || service.packages[0]?.price || service.professionalFees;
-                          return typeof basePrice === "number" ? basePrice.toLocaleString("en-IN") : basePrice;
-                        })()}
+                        ₹{getPrimaryServicePrice().toLocaleString("en-IN")}
                       </span>
                     </div>
 
@@ -1492,7 +1623,7 @@ export default function ServicePage() {
                         <p className="text-xs text-slate-500 italic pt-1">No complementary services checked. Tick boxes on the left to add.</p>
                       ) : (
                         relatedServicesList.filter(rel => selectedAddons[rel.id]).map(rel => {
-                          const relPrice = rel.packages[0]?.discountPrice || rel.packages[0]?.price || 1999;
+                          const relPrice = getRelatedServicePrice(rel);
                           return (
                             <div key={rel.id} className="flex justify-between items-center text-xs">
                               <span className="text-slate-300 font-medium truncate max-w-[200px]">+ {rel.serviceName}</span>
@@ -1510,11 +1641,11 @@ export default function ServicePage() {
                         <span className="text-slate-400">Total Professional Fee:</span>
                         <span className="font-mono text-slate-200">
                           ₹{(() => {
-                            const basePrice = service.packages[0]?.discountPrice || service.packages[0]?.price || service.professionalFees;
+                            const basePrice = getPrimaryServicePrice();
                             const addonsPrice = relatedServicesList
                               .filter(rel => selectedAddons[rel.id])
-                              .reduce((sum, rel) => sum + (rel.packages[0]?.discountPrice || rel.packages[0]?.price || 1999), 0);
-                            return (Number(basePrice) + addonsPrice).toLocaleString("en-IN");
+                              .reduce((sum, rel) => sum + getRelatedServicePrice(rel), 0);
+                            return (basePrice + addonsPrice).toLocaleString("en-IN");
                           })()}
                         </span>
                       </div>
@@ -1525,11 +1656,11 @@ export default function ServicePage() {
                           <span>10% Bundle Discount:</span>
                           <span>
                             - ₹{(() => {
-                              const basePrice = service.packages[0]?.discountPrice || service.packages[0]?.price || service.professionalFees;
+                              const basePrice = getPrimaryServicePrice();
                               const addonsPrice = relatedServicesList
                                 .filter(rel => selectedAddons[rel.id])
-                                .reduce((sum, rel) => sum + (rel.packages[0]?.discountPrice || rel.packages[0]?.price || 1999), 0);
-                              return Math.round((Number(basePrice) + addonsPrice) * 0.1).toLocaleString("en-IN");
+                                .reduce((sum, rel) => sum + getRelatedServicePrice(rel), 0);
+                              return Math.round((basePrice + addonsPrice) * 0.1).toLocaleString("en-IN");
                             })()}
                           </span>
                         </div>
@@ -1549,11 +1680,11 @@ export default function ServicePage() {
                         <div className="text-right">
                           <span className="text-2xl font-display font-black text-white">
                             ₹{(() => {
-                              const basePrice = service.packages[0]?.discountPrice || service.packages[0]?.price || service.professionalFees;
+                              const basePrice = getPrimaryServicePrice();
                               const addonsPrice = relatedServicesList
                                 .filter(rel => selectedAddons[rel.id])
-                                .reduce((sum, rel) => sum + (rel.packages[0]?.discountPrice || rel.packages[0]?.price || 1999), 0);
-                              const subtotal = Number(basePrice) + addonsPrice;
+                                .reduce((sum, rel) => sum + getRelatedServicePrice(rel), 0);
+                              const subtotal = basePrice + addonsPrice;
                               const discount = addonsPrice > 0 ? Math.round(subtotal * 0.1) : 0;
                               return (subtotal - discount + govtFeesValue).toLocaleString("en-IN");
                             })()}

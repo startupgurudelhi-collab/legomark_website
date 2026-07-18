@@ -807,57 +807,38 @@ export const SecurityRepository = {
 // ==========================================
 export const PackageRepository = {
   async getAll() {
-    if (isDbActive()) {
-      const db = getDb();
-      if (db) {
-        return db.select().from(schema.packages).where(eq(schema.packages.isDeleted, false));
-      }
+    const db = getDb();
+    if (!db) {
+      throw new Error("Database client is not initialized");
     }
-    return store.packagesDb;
+    return db.select().from(schema.packages).where(eq(schema.packages.isDeleted, false));
   },
 
   async create(pkg: any) {
-    if (isDbActive()) {
-      const db = getDb();
-      if (db) {
-        await db.insert(schema.packages).values(pkg);
-        return pkg;
-      }
+    const db = getDb();
+    if (!db) {
+      throw new Error("Database client is not initialized");
     }
-    store.packagesDb.push(pkg);
+    await db.insert(schema.packages).values(pkg);
     return pkg;
   },
 
   async update(id: string, updates: any) {
-    if (isDbActive()) {
-      const db = getDb();
-      if (db) {
-        await db.update(schema.packages).set(updates).where(eq(schema.packages.id, id));
-        return { id, ...updates };
-      }
+    const db = getDb();
+    if (!db) {
+      throw new Error("Database client is not initialized");
     }
-    const index = store.packagesDb.findIndex((p) => p.id === id);
-    if (index !== -1) {
-      store.packagesDb[index] = { ...store.packagesDb[index], ...updates };
-      return store.packagesDb[index];
-    }
-    return null;
+    await db.update(schema.packages).set(updates).where(eq(schema.packages.id, id));
+    return { id, ...updates };
   },
 
   async delete(id: string) {
-    if (isDbActive()) {
-      const db = getDb();
-      if (db) {
-        await db.update(schema.packages).set({ isDeleted: true }).where(eq(schema.packages.id, id));
-        return true;
-      }
+    const db = getDb();
+    if (!db) {
+      throw new Error("Database client is not initialized");
     }
-    const index = store.packagesDb.findIndex((p) => p.id === id);
-    if (index !== -1) {
-      store.packagesDb.splice(index, 1);
-      return true;
-    }
-    return false;
+    await db.update(schema.packages).set({ isDeleted: true }).where(eq(schema.packages.id, id));
+    return true;
   }
 };
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2, Check, Award } from "lucide-react";
 import { AdminPackage } from "../../data/adminStore.js";
 import { Input } from "../Input.js";
@@ -22,13 +22,75 @@ export default function PackagesTab({ packages, onUpdatePackages, services = [] 
 
   // Form state
   const [name, setName] = useState("");
-  const [serviceId, setServiceId] = useState("Private Limited Company");
+  const [serviceId, setServiceId] = useState("pvt-ltd");
   const [price, setPrice] = useState(0);
   const [discountPrice, setDiscountPrice] = useState(0);
   const [gstPercent, setGstPercent] = useState(18);
   const [displayOrder, setDisplayOrder] = useState(1);
   const [featuresText, setFeaturesText] = useState("");
   const [cta, setCta] = useState("Buy Standard Package");
+
+  // Legacy auto-migration check during load/rendering
+  useEffect(() => {
+    if (!services || services.length === 0 || !packages || packages.length === 0) return;
+
+    let hasUpdates = false;
+    const updatedPackages = packages.map((pkg) => {
+      // Find a service where serviceName matches the pkg's serviceId (indicating legacy display name) or matches IDs/aliases
+      const matchingService = services.find(
+        (s: any) =>
+          s.serviceName.toLowerCase() === pkg.serviceId.toLowerCase() ||
+          s.id.toLowerCase() === pkg.serviceId.toLowerCase() ||
+          (pkg.serviceId.toLowerCase() === "srv-pvt-ltd" && s.id === "pvt-ltd")
+      );
+
+      if (matchingService && matchingService.id !== pkg.serviceId) {
+        hasUpdates = true;
+        
+        // Save back using the resolved Service ID
+        const token = localStorage.getItem("efilingg_token");
+        const headers = {
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        };
+        const pkgPayload = {
+          name: pkg.name,
+          serviceId: matchingService.id,
+          price: Number(pkg.price),
+          discountPrice: pkg.discountPrice ? Number(pkg.discountPrice) : null,
+          gstPercent: Number(pkg.gstPercent),
+          displayOrder: Number(pkg.displayOrder),
+          features: pkg.features,
+          cta: pkg.cta || null
+        };
+        
+        fetch(`/api/cms/packages/${pkg.id}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify(pkgPayload)
+        })
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.success) {
+            console.log(`Auto-migrated legacy package "${pkg.name}" (${pkg.id}) serviceId to: ${matchingService.id}`);
+          }
+        })
+        .catch((err) => {
+          console.error(`Failed to auto-migrate legacy package ${pkg.id}:`, err);
+        });
+
+        return {
+          ...pkg,
+          serviceId: matchingService.id
+        };
+      }
+      return pkg;
+    });
+
+    if (hasUpdates) {
+      onUpdatePackages(updatedPackages);
+    }
+  }, [packages, services, onUpdatePackages]);
 
   const handleSelect = (pkg: AdminPackage) => {
     setSelectedPackage(pkg);
@@ -142,7 +204,7 @@ export default function PackagesTab({ packages, onUpdatePackages, services = [] 
   const handleClear = () => {
     setSelectedPackage(null);
     setName("");
-    setServiceId("Private Limited Company");
+    setServiceId("pvt-ltd");
     setPrice(0);
     setDiscountPrice(0);
     setGstPercent(18);
@@ -184,7 +246,12 @@ export default function PackagesTab({ packages, onUpdatePackages, services = [] 
               <div className="space-y-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase">{pkg.serviceId}</h4>
+                    <h4 className="text-xs font-mono font-bold tracking-wider text-slate-400 uppercase">
+                      {(() => {
+                        const s = (services || []).find((srv: any) => srv.id === pkg.serviceId || srv.serviceName === pkg.serviceId);
+                        return s ? s.serviceName : pkg.serviceId;
+                      })()}
+                    </h4>
                     <h3 className="text-sm font-extrabold text-slate-950 mt-0.5">{pkg.name}</h3>
                   </div>
                   <span className="px-2 py-0.5 text-[8px] font-mono bg-slate-100 text-slate-600 uppercase rounded">
@@ -257,15 +324,20 @@ export default function PackagesTab({ packages, onUpdatePackages, services = [] 
                 {(() => {
                   const activeServices = (services || []).filter((s: any) => s.draftStatus === "Published");
                   const displayServices = activeServices.length > 0 ? activeServices : (services || []);
-                  const hasSelectedService = displayServices.some((s: any) => s.serviceName === serviceId);
+                  const hasSelectedService = displayServices.some((s: any) => s.id === serviceId || s.serviceName === serviceId);
                   
                   return (
                     <>
                       {!hasSelectedService && serviceId && (
-                        <option value={serviceId}>{serviceId}</option>
+                        <option value={serviceId}>
+                          {(() => {
+                            const found = (services || []).find((s: any) => s.id === serviceId || s.serviceName === serviceId);
+                            return found ? found.serviceName : serviceId;
+                          })()}
+                        </option>
                       )}
                       {displayServices.map((service: any) => (
-                        <option key={service.id || service.serviceName} value={service.serviceName}>
+                        <option key={service.id} value={service.id}>
                           {service.serviceName}
                         </option>
                       ))}
