@@ -6,7 +6,8 @@
 import { Request, Response, NextFunction } from "express";
 import { HttpStatus } from "../../shared/enums.js";
 import { ApiResponse } from "../../shared/types.js";
-import { UserRepository, SessionRepository, SecurityRepository } from "../repositories/dataRepository.js";
+import { UserRepository, SessionRepository, SecurityRepository, isDbActive } from "../repositories/dataRepository.js";
+import { verifyConnection } from "../../database/index.js";
 import { hashPassword, comparePassword } from "../utils/password.js";
 import { logger } from "../utils/logger.js";
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken } from "../utils/jwt.js";
@@ -120,6 +121,21 @@ export async function login(
     const { email, password, rememberMe } = req.body;
     const cleanEmail = email.toLowerCase().trim();
 
+    // Connection validation (TASK 4)
+    if (isDbActive()) {
+      try {
+        await verifyConnection();
+      } catch (dbError: any) {
+        console.error("❌ Database connection failed inside login controller:", dbError);
+        res.status(500).json({
+          success: false,
+          message: `Database connection failed: ${dbError.message || dbError}`,
+          error: dbError.message || String(dbError),
+        });
+        return;
+      }
+    }
+
     // 1. Check account lockout/temporary lock status
     const failedStats = await SecurityRepository.getFailedAttempts(cleanEmail);
     if (failedStats.lockUntil && new Date(failedStats.lockUntil) > new Date()) {
@@ -212,11 +228,12 @@ export async function login(
         }
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error("Error in login controller:", error);
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "An internal server error occurred during authentication."
+      message: error instanceof Error ? error.message : "An internal server error occurred during authentication.",
+      error: error instanceof Error ? error.message : String(error)
     });
   }
 }

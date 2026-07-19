@@ -11,7 +11,12 @@ import { ApiResponse } from "../../shared/types.js";
 const router = Router();
 
 router.get("/health", async (req: Request, res: Response) => {
-  const dbConnected = await verifyConnection();
+  let dbConnected = false;
+  try {
+    dbConnected = await verifyConnection();
+  } catch (err) {
+    dbConnected = false;
+  }
 
   const data = {
     status: "UP",

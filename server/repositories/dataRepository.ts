@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getDb } from "../../database/index.js";
+import { getDb, getConnectionConfig, verifyConnection } from "../../database/index.js";
 import * as schema from "../../database/schema.js";
 import { eq, and, desc } from "drizzle-orm";
 import * as store from "./fallbackStore.js";
@@ -11,7 +11,7 @@ import fs from "fs";
 import path from "path";
 
 // Helper to determine if DB URL is active or if we should use fallback
-const isDbActive = (): boolean => {
+export const isDbActive = (): boolean => {
   try {
     const db = getDb();
     if (!db) return false;
@@ -36,8 +36,23 @@ export const UserRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        const results = await db.select().from(schema.users).where(eq(schema.users.email, cleanEmail)).limit(1);
-        return results[0] || null;
+        // Log details as requested in TASK 2
+        const config = getConnectionConfig();
+        const dbName = typeof config === "string" ? "URL-configured" : config.database;
+        const dbUser = typeof config === "string" ? "URL-configured" : config.user;
+        const dbHost = typeof config === "string" ? "URL-configured" : config.host;
+        console.log(`🔍 [UserRepository.findByEmail] Connected database name: ${dbName}`);
+        console.log(`🔍 [UserRepository.findByEmail] Current DB user: ${dbUser}`);
+        console.log(`🔍 [UserRepository.findByEmail] Current DB host: ${dbHost}`);
+
+        // Verify login query and run SELECT * FROM users WHERE email = ?
+        try {
+          const results = await db.select().from(schema.users).where(eq(schema.users.email, cleanEmail)).limit(1);
+          return results[0] || null;
+        } catch (sqlError: any) {
+          console.error(`❌ SQL query execution failed (SELECT * FROM users WHERE email = '${cleanEmail}'):`, sqlError);
+          throw sqlError;
+        }
       }
     }
     // Fallback

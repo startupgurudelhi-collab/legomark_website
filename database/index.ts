@@ -13,7 +13,7 @@ let pool: mysql.Pool | null = null;
 let dbInstance: any = null;
 
 // Helper to parse connection config
-function getConnectionConfig() {
+export function getConnectionConfig() {
   const dbUrl = process.env.DATABASE_URL;
   if (dbUrl && (dbUrl.startsWith("mysql://") || dbUrl.startsWith("mysqls://"))) {
     return dbUrl;
@@ -44,6 +44,12 @@ export function getDb() {
     const config = getConnectionConfig();
     pool = typeof config === "string" ? mysql.createPool(config) : mysql.createPool(config);
     dbInstance = drizzle(pool, { schema, mode: "default" });
+    
+    // Call verifyConnection and log EXACT mysql2 error if it fails
+    verifyConnection().catch((err) => {
+      console.error("❌ Pre-initialization verifyConnection failure:", err);
+    });
+
     return dbInstance;
   } catch (error) {
     console.error("❌ Failed to initialize database client:", error);
@@ -63,14 +69,14 @@ export async function verifyConnection(): Promise<boolean> {
     const connection = await activePool.getConnection();
     const [rows]: any = await connection.query("SELECT 1 as connected");
     connection.release();
-    const isConnected = rows && rows[0] && (rows[0].connected === 1 || rows[0].connected === "1" || rows[0].connected === 1);
+    const isConnected = rows && rows[0] && (rows[0].connected === 1 || rows[0].connected === "1");
     if (isConnected) {
       console.log("✅ MySQL Database connection verified successfully!");
     }
     return !!isConnected;
   } catch (err) {
     console.error("❌ MySQL Database connection verification failed:", err);
-    return false;
+    throw err;
   }
 }
 
