@@ -62,6 +62,7 @@ router.post("/leads", requireAuth, LeadsController.create);
 router.put("/leads/:id", requireAuth, LeadsController.update);
 router.post("/leads/:id/notes", requireAuth, LeadsController.addNote);
 router.post("/leads/:id/status", requireAuth, LeadsController.changeStatus);
+router.delete("/leads/:id", requireAuth, LeadsController.delete);
 
 // Orders Endpoints
 router.get("/orders", requireAuth, OrdersController.list);

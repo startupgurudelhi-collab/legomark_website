@@ -163,6 +163,11 @@ export const LeadsService = {
     };
     statusHistory.push(log);
     return LeadRepository.update(id, { status: toStatus, statusHistory, updatedAt: new Date() });
+  },
+
+  async delete(id: string) {
+    logger.info(`[Leads] Soft-deleting lead ${id}`);
+    return LeadRepository.delete(id);
   }
 };
 

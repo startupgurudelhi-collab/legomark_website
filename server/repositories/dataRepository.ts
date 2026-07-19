@@ -77,7 +77,7 @@ export const LeadRepository = {
         return db.select().from(schema.leads).where(eq(schema.leads.isDeleted, false));
       }
     }
-    return store.leadsDb;
+    return (store.leadsDb as any[]).filter((l) => !l.isDeleted);
   },
 
   async findById(id: string) {
@@ -117,6 +117,27 @@ export const LeadRepository = {
       return store.leadsDb[index];
     }
     return null;
+  },
+
+  async delete(id: string) {
+    const timestamp = new Date();
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.update(schema.leads).set({ isDeleted: true, updatedAt: timestamp }).where(eq(schema.leads.id, id));
+        return true;
+      }
+    }
+    const index = (store.leadsDb as any[]).findIndex((l) => l.id === id);
+    if (index !== -1) {
+      store.leadsDb[index] = {
+        ...store.leadsDb[index],
+        isDeleted: true,
+        deletedAt: timestamp.toISOString()
+      } as any;
+      return true;
+    }
+    return false;
   }
 };
 

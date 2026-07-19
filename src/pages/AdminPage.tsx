@@ -155,7 +155,7 @@ export default function AdminPage() {
   const [searchResults, setSearchResults] = useState<Array<{ label: string; tab: string }>>([]);
 
   // Persistent States synced to Local Storage
-  const [leads, setLeads] = useState<AdminLead[]>(() => getStoredState("leads", initialLeads));
+  const [leads, setLeads] = useState<AdminLead[]>(initialLeads);
   const [orders, setOrders] = useState<AdminOrder[]>(() => getStoredState("orders", initialOrders));
   const [tasks, setTasks] = useState<AdminTask[]>(() => getStoredState("tasks", initialTasks));
   const [blogs, setBlogs] = useState<AdminBlogPost[]>(() => getStoredState("blogs", initialBlogPosts));
@@ -241,7 +241,6 @@ export default function AdminPage() {
   }, [user]);
 
   // Keep state saves robust
-  useEffect(() => { setStoredState("leads", leads); }, [leads]);
   useEffect(() => { setStoredState("orders", orders); }, [orders]);
   useEffect(() => { setStoredState("tasks", tasks); }, [tasks]);
   useEffect(() => { setStoredState("blogs", blogs); }, [blogs]);

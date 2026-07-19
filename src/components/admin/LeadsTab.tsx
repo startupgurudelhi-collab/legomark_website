@@ -116,12 +116,38 @@ export default function LeadsTab({ leads, onUpdateLeads, onAddOrder }: LeadsTabP
   // Sync selectedLead when effectiveLeads changes
   useEffect(() => {
     if (selectedLead) {
-      const exists = effectiveLeads.some(l => l.id === selectedLead.id);
-      if (!exists) {
-        setSelectedLead(effectiveLeads[0] || null);
+      const current = effectiveLeads.find(l => l.id === selectedLead.id);
+      if (current) {
+        setSelectedLead(current);
+        setEditStatus(current.status);
+        setEditCompany(current.companyName || "");
+        setEditExecutive(current.assignedExecutive || "Unassigned");
+        setEditPriority(current.priority || "Medium");
+        setEditFollowUpDate(current.followUpDate || "");
+        setEditNotes(current.notes || "");
+      } else {
+        const first = effectiveLeads[0] || null;
+        setSelectedLead(first);
+        if (first) {
+          setEditStatus(first.status);
+          setEditCompany(first.companyName || "");
+          setEditExecutive(first.assignedExecutive || "Unassigned");
+          setEditPriority(first.priority || "Medium");
+          setEditFollowUpDate(first.followUpDate || "");
+          setEditNotes(first.notes || "");
+        }
       }
     } else {
-      setSelectedLead(effectiveLeads[0] || null);
+      const first = effectiveLeads[0] || null;
+      setSelectedLead(first);
+      if (first) {
+        setEditStatus(first.status);
+        setEditCompany(first.companyName || "");
+        setEditExecutive(first.assignedExecutive || "Unassigned");
+        setEditPriority(first.priority || "Medium");
+        setEditFollowUpDate(first.followUpDate || "");
+        setEditNotes(first.notes || "");
+      }
     }
   }, [leads]);
 
@@ -177,141 +203,209 @@ export default function LeadsTab({ leads, onUpdateLeads, onAddOrder }: LeadsTabP
     if (leadToMove.status === targetStatus) return;
 
     updateLeadStatusDirectly(leadToMove, targetStatus);
-    toast.success(`Moved ${leadToMove.name} to '${targetStatus}'`, "Pipeline Synchronized");
   };
 
   // Centralised Lead Status update handler
-  const updateLeadStatusDirectly = (lead: AdminLead, targetStatus: AdminLead["status"]) => {
+  const updateLeadStatusDirectly = async (lead: AdminLead, targetStatus: AdminLead["status"]) => {
     const previousStatus = lead.status;
-    const log: LeadStatusLog = {
-      id: `lsl-${Date.now()}`,
-      fromStatus: previousStatus,
-      toStatus: targetStatus,
-      updatedBy: "Admin Executive",
-      date: new Date().toISOString().split("T")[0]
+
+    const token = localStorage.getItem("efilingg_token");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
     };
-
-    const updated = leads.map((l) => {
-      if (l.id === lead.id) {
-        const history = l.statusHistory || [];
-        return {
-          ...l,
-          status: targetStatus,
-          statusHistory: [...history, log],
-          updatedAt: new Date().toISOString().split("T")[0]
-        };
-      }
-      return l;
-    });
-
-    onUpdateLeads(updated);
-    
-    // Auto sync selected Lead UI
-    if (selectedLead?.id === lead.id) {
-      setSelectedLead({
-        ...selectedLead,
-        status: targetStatus,
-        statusHistory: [...(selectedLead.statusHistory || []), log],
-        updatedAt: new Date().toISOString().split("T")[0]
-      });
-      setEditStatus(targetStatus);
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
-    // Trigger conversion trigger if Won
-    if (targetStatus === "Won") {
-      setShowConversionModal(true);
+    try {
+      const response = await fetch(`/api/leads/${lead.id}/status`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          fromStatus: previousStatus,
+          toStatus: targetStatus,
+          updatedBy: "Admin Executive"
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to update status on server.");
+      }
+
+      // On success, refresh the leads list from the server
+      const getResponse = await fetch("/api/leads", { headers });
+      const getData = await getResponse.json();
+      if (getResponse.ok && getData.success && getData.data) {
+        onUpdateLeads(getData.data);
+        const refreshedLead = getData.data.find((l: any) => l.id === lead.id);
+        if (refreshedLead) {
+          if (selectedLead?.id === lead.id) {
+            setSelectedLead(refreshedLead);
+            setEditStatus(refreshedLead.status);
+          }
+        }
+      } else {
+        // Fallback local update
+        const updatedLead = data.data || {
+          ...lead,
+          status: targetStatus,
+          statusHistory: [...(lead.statusHistory || []), {
+            id: `lsl-${Date.now()}`,
+            fromStatus: previousStatus,
+            toStatus: targetStatus,
+            updatedBy: "Admin Executive",
+            date: new Date().toISOString().split("T")[0]
+          }],
+          updatedAt: new Date().toISOString().split("T")[0]
+        };
+        const updated = leads.map((l) => (l.id === lead.id ? updatedLead : l));
+        onUpdateLeads(updated);
+        if (selectedLead?.id === lead.id) {
+          setSelectedLead(updatedLead);
+          setEditStatus(targetStatus);
+        }
+      }
+
+      toast.success(`Moved ${lead.name} to '${targetStatus}'`, "Pipeline Synchronized");
+
+      // Trigger conversion trigger if Won
+      if (targetStatus === "Won") {
+        setShowConversionModal(true);
+      }
+    } catch (err: any) {
+      console.error("Failed to update status:", err);
+      toast.error(err.message || "Could not sync status. Try again.", "Sync Failed");
     }
   };
 
   // Lead metadata updates
-  const handleSaveLeadDetails = () => {
+  const handleSaveLeadDetails = async () => {
     if (!selectedLead) return;
 
-    const previousStatus = selectedLead.status;
-    const isStatusChanged = previousStatus !== editStatus;
-
-    let statusHist = selectedLead.statusHistory || [];
-    if (isStatusChanged) {
-      statusHist = [
-        ...statusHist,
-        {
-          id: `lsl-${Date.now()}`,
-          fromStatus: previousStatus,
-          toStatus: editStatus,
-          updatedBy: "Lead Admin Office",
-          date: new Date().toISOString().split("T")[0]
-        }
-      ];
+    const token = localStorage.getItem("efilingg_token");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const updated = leads.map((l) => {
-      if (l.id === selectedLead.id) {
-        return {
-          ...l,
+    try {
+      const response = await fetch(`/api/leads/${selectedLead.id}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
           companyName: editCompany,
           assignedExecutive: editExecutive,
           priority: editPriority,
           followUpDate: editFollowUpDate,
-          status: editStatus,
+          notes: editNotes
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to update lead details on the server.");
+      }
+
+      // On success, refresh the leads list from the server
+      const getResponse = await fetch("/api/leads", { headers });
+      const getData = await getResponse.json();
+      if (getResponse.ok && getData.success && getData.data) {
+        onUpdateLeads(getData.data);
+        const refreshedLead = getData.data.find((l: any) => l.id === selectedLead.id);
+        if (refreshedLead) {
+          setSelectedLead(refreshedLead);
+        }
+      } else {
+        // Fallback local update
+        const updatedLead = data.data || {
+          ...selectedLead,
+          companyName: editCompany,
+          assignedExecutive: editExecutive,
+          priority: editPriority,
+          followUpDate: editFollowUpDate,
           notes: editNotes,
-          statusHistory: statusHist,
           updatedAt: new Date().toISOString().split("T")[0]
         };
+        const updated = leads.map((l) => (l.id === selectedLead.id ? updatedLead : l));
+        onUpdateLeads(updated);
+        setSelectedLead(updatedLead);
       }
-      return l;
-    });
 
-    onUpdateLeads(updated);
-    setSelectedLead({
-      ...selectedLead,
-      companyName: editCompany,
-      assignedExecutive: editExecutive,
-      priority: editPriority,
-      followUpDate: editFollowUpDate,
-      status: editStatus,
-      notes: editNotes,
-      statusHistory: statusHist,
-      updatedAt: new Date().toISOString().split("T")[0]
-    });
-
-    toast.success("Client metadata record saved.", "Inquire Database Synced");
-
-    // Order Conversion trigger
-    if (isStatusChanged && editStatus === "Won") {
-      setShowConversionModal(true);
+      toast.success("Client metadata record saved.", "Inquire Database Synced");
+    } catch (err: any) {
+      console.error("Failed to save lead details:", err);
+      toast.error(err.message || "Could not save details. Try again.", "Save Failed");
     }
   };
 
   // Add notes log
-  const handleAddNoteLog = () => {
+  const handleAddNoteLog = async () => {
     if (!selectedLead || !newNoteText.trim()) return;
 
-    const newNote: LeadNoteLog = {
-      id: `lnote-${Date.now()}`,
-      author: "Admin Consultant",
-      note: newNoteText.trim(),
-      date: new Date().toISOString().split("T")[0]
+    const token = localStorage.getItem("efilingg_token");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
     };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
-    const updated = leads.map((l) => {
-      if (l.id === selectedLead.id) {
-        const history = l.notesHistory || [];
-        return {
-          ...l,
-          notesHistory: [...history, newNote],
-          updatedAt: new Date().toISOString().split("T")[0]
-        };
+    try {
+      const response = await fetch(`/api/leads/${selectedLead.id}/notes`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          author: "Admin Consultant",
+          note: newNoteText.trim()
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to save note on the server.");
       }
-      return l;
-    });
 
-    onUpdateLeads(updated);
-    setSelectedLead({
-      ...selectedLead,
-      notesHistory: [...(selectedLead.notesHistory || []), newNote]
-    });
-    setNewNoteText("");
-    toast.success("Consultation memo logged.", "Internal Remarks Appended");
+      // Refresh the lead list from the server on success
+      const getResponse = await fetch("/api/leads", { headers });
+      const getData = await getResponse.json();
+      if (getResponse.ok && getData.success && getData.data) {
+        onUpdateLeads(getData.data);
+        const refreshedLead = getData.data.find((l: any) => l.id === selectedLead.id);
+        if (refreshedLead) {
+          setSelectedLead(refreshedLead);
+        }
+      } else {
+        // Fallback local update
+        const newNote: LeadNoteLog = {
+          id: `lnote-${Date.now()}`,
+          author: "Admin Consultant",
+          note: newNoteText.trim(),
+          date: new Date().toISOString().split("T")[0]
+        };
+        const updated = leads.map((l) => {
+          if (l.id === selectedLead.id) {
+            const history = l.notesHistory || [];
+            return {
+              ...l,
+              notesHistory: [...history, newNote],
+              updatedAt: new Date().toISOString().split("T")[0]
+            };
+          }
+          return l;
+        });
+        onUpdateLeads(updated);
+        setSelectedLead({
+          ...selectedLead,
+          notesHistory: [...(selectedLead.notesHistory || []), newNote]
+        });
+      }
+
+      setNewNoteText("");
+      toast.success("Consultation memo logged.", "Internal Remarks Appended");
+    } catch (err: any) {
+      console.error("Failed to add note:", err);
+      toast.error(err.message || "Could not log note. Try again.", "Log Failed");
+    }
   };
 
   // Add follow-up log entry
@@ -422,18 +516,47 @@ export default function LeadsTab({ leads, onUpdateLeads, onAddOrder }: LeadsTabP
     setConfirmDelete({ id, name: lead.name });
   };
 
-  const executeDeleteLead = (id: string) => {
+  const executeDeleteLead = async (id: string) => {
+    const token = localStorage.getItem("efilingg_token");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     try {
-      onUpdateLeads(leads.filter((l) => l.id !== id));
-      setSelectedLead(leads[0] || null);
+      const response = await fetch(`/api/leads/${id}`, {
+        method: "DELETE",
+        headers
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to delete lead on the server.");
+      }
+
+      // Refresh the leads list from the server
+      const getResponse = await fetch("/api/leads", { headers });
+      const getData = await getResponse.json();
+      if (getResponse.ok && getData.success && getData.data) {
+        onUpdateLeads(getData.data);
+        const remaining = getData.data.filter((l: any) => l.id !== id);
+        setSelectedLead(remaining[0] || null);
+      } else {
+        const remaining = leads.filter((l) => l.id !== id);
+        onUpdateLeads(remaining);
+        setSelectedLead(remaining[0] || null);
+      }
+
       toast.success("Item deleted successfully.", "Lead Deleted");
-    } catch (err) {
-      toast.error("Failed to delete the lead.", "Deletion Failed");
+    } catch (err: any) {
+      console.error("Failed to delete lead:", err);
+      toast.error(err.message || "Could not delete the lead. Try again.", "Deletion Failed");
     }
   };
 
   // Manual Lead Creation
-  const handleAddLead = (e: React.FormEvent) => {
+  const handleAddLead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName.trim() || !newPhone.trim() || !newEmail.trim()) {
       alert("Please fill in Name, Phone, and Email.");
@@ -469,18 +592,51 @@ export default function LeadsTab({ leads, onUpdateLeads, onAddOrder }: LeadsTabP
       followUpHistory: []
     };
 
-    onUpdateLeads([freshLead, ...leads]);
-    setSelectedLead(freshLead);
-    setShowAddModal(false);
+    const token = localStorage.getItem("efilingg_token");
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json"
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
 
-    // reset forms
-    setNewName("");
-    setNewPhone("");
-    setNewEmail("");
-    setNewCompany("");
-    setNewNotes("");
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers,
+        body: JSON.stringify(freshLead)
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Failed to create lead on the server.");
+      }
 
-    toast.success(`Client Intake Successful: ${freshLead.name}`, "Database Appended");
+      // On success, refresh the leads list from the server
+      const getResponse = await fetch("/api/leads", { headers });
+      const getData = await getResponse.json();
+      if (getResponse.ok && getData.success && getData.data) {
+        onUpdateLeads(getData.data);
+        const addedLead = getData.data.find((l: any) => l.email === newEmail) || data.data || freshLead;
+        setSelectedLead(addedLead);
+      } else {
+        onUpdateLeads([data.data || freshLead, ...leads]);
+        setSelectedLead(data.data || freshLead);
+      }
+
+      setShowAddModal(false);
+
+      // reset forms
+      setNewName("");
+      setNewPhone("");
+      setNewEmail("");
+      setNewCompany("");
+      setNewNotes("");
+
+      toast.success(`Client Intake Successful: ${freshLead.name}`, "Database Appended");
+    } catch (err: any) {
+      console.error("Manual lead creation failed:", err);
+      toast.error(err.message || "Could not register new lead. Try again.", "Manual Intake Failed");
+    }
   };
 
   // Order Conversion Submittal
@@ -959,7 +1115,13 @@ Legomark India`
                       <label className="text-[9px] font-bold uppercase text-slate-400 block mb-0.5">Sales Funnel Status</label>
                       <select
                         value={editStatus}
-                        onChange={(e) => setEditStatus(e.target.value as any)}
+                        onChange={(e) => {
+                          const targetStatus = e.target.value as any;
+                          setEditStatus(targetStatus);
+                          if (selectedLead) {
+                            updateLeadStatusDirectly(selectedLead, targetStatus);
+                          }
+                        }}
                         className="w-full p-2 border border-slate-250 bg-white rounded-lg text-xs font-bold text-slate-800 focus:outline-none"
                       >
                         {LEAD_STATUSES.map((status) => (

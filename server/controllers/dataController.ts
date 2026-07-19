@@ -83,6 +83,16 @@ export const LeadsController = {
     } catch (err) {
       return sendError(res, err, "Failed to update lead status");
     }
+  },
+
+  async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      await LeadsService.delete(id);
+      return sendSuccess(res, "Lead deleted successfully");
+    } catch (err) {
+      return sendError(res, err, "Failed to delete lead");
+    }
   }
 };
 
