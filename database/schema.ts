@@ -299,3 +299,36 @@ export const automationLogs = mysqlTable("automation_logs", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+// 19. CMS Settings Table
+export const cmsSettings = mysqlTable("cms_settings", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  key: varchar("key", { length: 255 }).notNull().unique(),
+  value: json("value").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// 20. Client Logos Table
+export const clientLogos = mysqlTable("client_logos", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  clientName: varchar("client_name", { length: 255 }).notNull(),
+  imageUrl: text("image_url").notNull(),
+  sortOrder: int("sort_order").notNull().default(0),
+  status: varchar("status", { length: 50 }).notNull().default("Active"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// 21. Homepage Sections Table
+export const homepageSections = mysqlTable("homepage_sections", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  sectionKey: varchar("section_key", { length: 255 }).notNull().unique(),
+  title: text("title"),
+  subtitle: text("subtitle"),
+  badge: varchar("badge", { length: 255 }),
+  content: json("content"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+

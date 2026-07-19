@@ -12,7 +12,19 @@ import path from "path";
 
 // Helper to determine if DB URL is active or if we should use fallback
 const isDbActive = (): boolean => {
-  return !!process.env.DATABASE_URL;
+  try {
+    const db = getDb();
+    if (!db) return false;
+    return !!(
+      process.env.DATABASE_URL ||
+      process.env.DB_HOST ||
+      process.env.DB_USER ||
+      process.env.DB_NAME ||
+      process.env.DB_PASSWORD
+    );
+  } catch {
+    return false;
+  }
 };
 
 // ==========================================
@@ -557,64 +569,515 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
 // Automatically load on initialization of this repository module
 loadCmsPersistence();
 
+function mapHomepageFromDb(row: any) {
+  if (!row) return null;
+  return {
+    heroTitle: row.title || "",
+    heroSub: row.subtitle || "",
+    heroBadge: row.badge || "",
+    ...(typeof row.content === "string" ? JSON.parse(row.content) : row.content || {})
+  };
+}
+
+function mapHomepageToDb(updates: any) {
+  const { heroTitle, heroSub, heroBadge, ...rest } = updates;
+  return {
+    title: heroTitle || null,
+    subtitle: heroSub || null,
+    badge: heroBadge || null,
+    content: rest,
+    updatedAt: new Date()
+  };
+}
+
+async function getSettingFromDb(key: string, defaultValue: any) {
+  const db = getDb();
+  if (db) {
+    const results = await db.select().from(schema.cmsSettings).where(eq(schema.cmsSettings.key, key)).limit(1);
+    if (results[0]) {
+      const val = results[0].value;
+      return typeof val === "string" ? JSON.parse(val) : val;
+    }
+  }
+  return defaultValue;
+}
+
+async function updateSettingInDb(key: string, value: any) {
+  const db = getDb();
+  if (db) {
+    const existing = await db.select().from(schema.cmsSettings).where(eq(schema.cmsSettings.key, key)).limit(1);
+    if (existing[0]) {
+      await db.update(schema.cmsSettings).set({ value, updatedAt: new Date() }).where(eq(schema.cmsSettings.key, key));
+    } else {
+      await db.insert(schema.cmsSettings).values({
+        id: `setting-${Math.floor(100 + Math.random() * 900)}`,
+        key,
+        value,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+  }
+}
+
 export const CmsConfigRepository = {
   async getHomepage() {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        const results = await db.select().from(schema.homepageSections).where(eq(schema.homepageSections.sectionKey, "homepage")).limit(1);
+        if (results[0]) {
+          return mapHomepageFromDb(results[0]);
+        }
+      }
+    }
     loadCmsPersistence();
     return store.homepageCmsDb;
   },
   async updateHomepage(updates: any) {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        const dbUpdates = mapHomepageToDb(updates);
+        const existing = await db.select().from(schema.homepageSections).where(eq(schema.homepageSections.sectionKey, "homepage")).limit(1);
+        if (existing[0]) {
+          await db.update(schema.homepageSections).set(dbUpdates).where(eq(schema.homepageSections.sectionKey, "homepage"));
+        } else {
+          await db.insert(schema.homepageSections).values({
+            id: `hp-${Math.floor(100 + Math.random() * 900)}`,
+            sectionKey: "homepage",
+            ...dbUpdates,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
+        return updates;
+      }
+    }
     mergeCmsSectionAndSave("homepageCmsDb", updates);
     return store.homepageCmsDb;
   },
   async getContact() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("contactInfoDb", null);
+      if (val) return val;
+    }
     loadCmsPersistence();
     return store.contactInfoDb;
   },
   async updateContact(updates: any) {
+    if (isDbActive()) {
+      await updateSettingInDb("contactInfoDb", updates);
+      return updates;
+    }
     mergeCmsSectionAndSave("contactInfoDb", updates);
     return store.contactInfoDb;
   },
   async getSettings() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("adminSettingsDb", null);
+      if (val) return val;
+    }
     loadCmsPersistence();
     return store.adminSettingsDb;
   },
   async updateSettings(updates: any) {
+    if (isDbActive()) {
+      await updateSettingInDb("adminSettingsDb", updates);
+      return updates;
+    }
     mergeCmsSectionAndSave("adminSettingsDb", updates);
     return store.adminSettingsDb;
   },
   async getMedia() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("mediaDb", null);
+      if (val) return val;
+    }
     loadCmsPersistence();
     return store.mediaDb;
   },
   async addMedia(file: any) {
+    if (isDbActive()) {
+      const current = await getSettingFromDb("mediaDb", []) || [];
+      const updatedMedia = [...current, file];
+      await updateSettingInDb("mediaDb", updatedMedia);
+      return file;
+    }
     loadCmsPersistence();
     const updatedMedia = [...store.mediaDb, file];
     mergeCmsSectionAndSave("mediaDb", updatedMedia);
     return file;
   },
   async getTestimonials() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("testimonialsDb", null);
+      if (val) return val;
+    }
     loadCmsPersistence();
     return store.testimonialsDb;
   },
   async updateTestimonials(list: any[]) {
+    if (isDbActive()) {
+      await updateSettingInDb("testimonialsDb", list);
+      return list;
+    }
     mergeCmsSectionAndSave("testimonialsDb", list);
     return store.testimonialsDb;
   },
   async getLogos() {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        const results = await db.select().from(schema.clientLogos).orderBy(schema.clientLogos.sortOrder);
+        if (results.length > 0) {
+          return results.map((row: any) => ({
+            id: row.id,
+            clientName: row.clientName,
+            imageUrl: row.imageUrl,
+            sortOrder: row.sortOrder,
+            status: row.status
+          }));
+        }
+      }
+    }
     loadCmsPersistence();
     return store.logosDb;
   },
   async updateLogos(list: any[]) {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.delete(schema.clientLogos);
+        for (const item of list) {
+          await db.insert(schema.clientLogos).values({
+            id: item.id || `logo-custom-${Math.floor(100 + Math.random() * 900)}`,
+            clientName: item.clientName || "Client Logo",
+            imageUrl: item.imageUrl || "",
+            sortOrder: item.sortOrder || 0,
+            status: item.status || "Active",
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        }
+        return list;
+      }
+    }
     mergeCmsSectionAndSave("logosDb", list);
     return store.logosDb;
   },
   async getFaqs() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("faqsDb", null);
+      if (val) return val;
+    }
     loadCmsPersistence();
     return store.faqsDb;
   },
   async updateFaqs(list: any[]) {
+    if (isDbActive()) {
+      await updateSettingInDb("faqsDb", list);
+      return list;
+    }
     mergeCmsSectionAndSave("faqsDb", list);
     return store.faqsDb;
+  }
+};
+
+// ==========================================
+// CLIENT LOGOS REPOSITORY
+// ==========================================
+export const ClientLogosRepository = {
+  async list() {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        return db.select().from(schema.clientLogos).orderBy(schema.clientLogos.sortOrder);
+      }
+    }
+    loadCmsPersistence();
+    return store.logosDb;
+  },
+
+  async create(logo: any) {
+    const id = logo.id || `logo-custom-${Math.floor(100 + Math.random() * 900)}`;
+    const newLogo = {
+      id,
+      clientName: logo.clientName || "Client Logo",
+      imageUrl: logo.imageUrl || "",
+      sortOrder: logo.sortOrder || 0,
+      status: logo.status || "Active",
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.insert(schema.clientLogos).values(newLogo);
+        return newLogo;
+      }
+    }
+
+    store.logosDb.push({
+      id: newLogo.id,
+      clientName: newLogo.clientName,
+      imageUrl: newLogo.imageUrl,
+      sortOrder: newLogo.sortOrder,
+      status: newLogo.status
+    });
+    mergeCmsSectionAndSave("logosDb", store.logosDb);
+    return newLogo;
+  },
+
+  async update(id: string, updates: any) {
+    const dbUpdates = {
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.update(schema.clientLogos).set(dbUpdates).where(eq(schema.clientLogos.id, id));
+        const results = await db.select().from(schema.clientLogos).where(eq(schema.clientLogos.id, id)).limit(1);
+        return results[0] || null;
+      }
+    }
+
+    const index = store.logosDb.findIndex((l) => l.id === id);
+    if (index !== -1) {
+      store.logosDb[index] = { ...store.logosDb[index], ...updates };
+      mergeCmsSectionAndSave("logosDb", store.logosDb);
+      return store.logosDb[index];
+    }
+    return null;
+  },
+
+  async delete(id: string) {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.delete(schema.clientLogos).where(eq(schema.clientLogos.id, id));
+        return true;
+      }
+    }
+
+    const index = store.logosDb.findIndex((l) => l.id === id);
+    if (index !== -1) {
+      store.logosDb.splice(index, 1);
+      mergeCmsSectionAndSave("logosDb", store.logosDb);
+      return true;
+    }
+    return false;
+  }
+};
+
+// ==========================================
+// HOMEPAGE SECTIONS REPOSITORY
+// ==========================================
+export const HomepageSectionsRepository = {
+  async list() {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        return db.select().from(schema.homepageSections);
+      }
+    }
+    loadCmsPersistence();
+    return [{
+      id: "homepage",
+      sectionKey: "homepage",
+      title: store.homepageCmsDb.heroTitle,
+      subtitle: store.homepageCmsDb.heroSub,
+      badge: store.homepageCmsDb.heroBadge,
+      content: store.homepageCmsDb
+    }];
+  },
+
+  async create(section: any) {
+    const id = section.id || `section-${Math.floor(100 + Math.random() * 900)}`;
+    const newSection = {
+      id,
+      sectionKey: section.sectionKey || "custom-section",
+      title: section.title || null,
+      subtitle: section.subtitle || null,
+      badge: section.badge || null,
+      content: section.content || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.insert(schema.homepageSections).values(newSection);
+        return newSection;
+      }
+    }
+
+    if (newSection.sectionKey === "homepage") {
+      const merged = {
+        ...store.homepageCmsDb,
+        heroTitle: newSection.title || store.homepageCmsDb.heroTitle,
+        heroSub: newSection.subtitle || store.homepageCmsDb.heroSub,
+        heroBadge: newSection.badge || store.homepageCmsDb.heroBadge,
+        ...(newSection.content || {})
+      };
+      for (const k in store.homepageCmsDb) {
+        delete (store.homepageCmsDb as any)[k];
+      }
+      Object.assign(store.homepageCmsDb, merged);
+      mergeCmsSectionAndSave("homepageCmsDb", store.homepageCmsDb);
+    }
+    return newSection;
+  },
+
+  async update(id: string, updates: any) {
+    const dbUpdates = {
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.update(schema.homepageSections).set(dbUpdates).where(eq(schema.homepageSections.id, id));
+        const results = await db.select().from(schema.homepageSections).where(eq(schema.homepageSections.id, id)).limit(1);
+        return results[0] || null;
+      }
+    }
+
+    if (id === "homepage" || updates.sectionKey === "homepage") {
+      const merged = {
+        ...store.homepageCmsDb,
+        heroTitle: updates.title !== undefined ? updates.title : store.homepageCmsDb.heroTitle,
+        heroSub: updates.subtitle !== undefined ? updates.subtitle : store.homepageCmsDb.heroSub,
+        heroBadge: updates.badge !== undefined ? updates.badge : store.homepageCmsDb.heroBadge,
+        ...(updates.content || {})
+      };
+      for (const k in store.homepageCmsDb) {
+        delete (store.homepageCmsDb as any)[k];
+      }
+      Object.assign(store.homepageCmsDb, merged);
+      mergeCmsSectionAndSave("homepageCmsDb", store.homepageCmsDb);
+      return { id, ...updates };
+    }
+    return null;
+  },
+
+  async delete(id: string) {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.delete(schema.homepageSections).where(eq(schema.homepageSections.id, id));
+        return true;
+      }
+    }
+    return true;
+  }
+};
+
+// ==========================================
+// CMS SETTINGS REPOSITORY
+// ==========================================
+export const CmsSettingsRepository = {
+  async list() {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        return db.select().from(schema.cmsSettings);
+      }
+    }
+    loadCmsPersistence();
+    return [
+      { id: "contact", key: "contactInfoDb", value: store.contactInfoDb },
+      { id: "settings", key: "adminSettingsDb", value: store.adminSettingsDb },
+      { id: "testimonials", key: "testimonialsDb", value: store.testimonialsDb },
+      { id: "faqs", key: "faqsDb", value: store.faqsDb },
+      { id: "media", key: "mediaDb", value: store.mediaDb }
+    ];
+  },
+
+  async create(setting: any) {
+    const id = setting.id || `setting-${Math.floor(100 + Math.random() * 900)}`;
+    const newSetting = {
+      id,
+      key: setting.key,
+      value: setting.value,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.insert(schema.cmsSettings).values(newSetting);
+        return newSetting;
+      }
+    }
+
+    if (newSetting.key === "contactInfoDb") {
+      for (const k in store.contactInfoDb) { delete (store.contactInfoDb as any)[k]; }
+      Object.assign(store.contactInfoDb, newSetting.value);
+      mergeCmsSectionAndSave("contactInfoDb", store.contactInfoDb);
+    } else if (newSetting.key === "adminSettingsDb") {
+      for (const k in store.adminSettingsDb) { delete (store.adminSettingsDb as any)[k]; }
+      Object.assign(store.adminSettingsDb, newSetting.value);
+      mergeCmsSectionAndSave("adminSettingsDb", store.adminSettingsDb);
+    } else if (newSetting.key === "testimonialsDb") {
+      store.testimonialsDb.length = 0;
+      store.testimonialsDb.push(...(Array.isArray(newSetting.value) ? newSetting.value : []));
+      mergeCmsSectionAndSave("testimonialsDb", store.testimonialsDb);
+    } else if (newSetting.key === "faqsDb") {
+      store.faqsDb.length = 0;
+      store.faqsDb.push(...(Array.isArray(newSetting.value) ? newSetting.value : []));
+      mergeCmsSectionAndSave("faqsDb", store.faqsDb);
+    } else if (newSetting.key === "mediaDb") {
+      store.mediaDb.length = 0;
+      store.mediaDb.push(...(Array.isArray(newSetting.value) ? newSetting.value : []));
+      mergeCmsSectionAndSave("mediaDb", store.mediaDb);
+    }
+    return newSetting;
+  },
+
+  async update(id: string, updates: any) {
+    const dbUpdates = {
+      ...updates,
+      updatedAt: new Date()
+    };
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.update(schema.cmsSettings).set(dbUpdates).where(eq(schema.cmsSettings.id, id));
+        const results = await db.select().from(schema.cmsSettings).where(eq(schema.cmsSettings.id, id)).limit(1);
+        return results[0] || null;
+      }
+    }
+
+    if (updates.key) {
+      if (updates.key === "contactInfoDb") {
+        Object.assign(store.contactInfoDb, updates.value || {});
+        mergeCmsSectionAndSave("contactInfoDb", store.contactInfoDb);
+      } else if (updates.key === "adminSettingsDb") {
+        Object.assign(store.adminSettingsDb, updates.value || {});
+        mergeCmsSectionAndSave("adminSettingsDb", store.adminSettingsDb);
+      }
+      return { id, ...updates };
+    }
+    return null;
+  },
+
+  async delete(id: string) {
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.delete(schema.cmsSettings).where(eq(schema.cmsSettings.id, id));
+        return true;
+      }
+    }
+    return true;
   }
 };
 
