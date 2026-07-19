@@ -459,6 +459,10 @@ function loadCmsPersistence() {
           store.faqsDb.length = 0;
           store.faqsDb.push(...data.faqsDb);
         }
+        if (data.packagesDb) {
+          store.packagesDb.length = 0;
+          store.packagesDb.push(...data.packagesDb);
+        }
       }
     }
   } catch (err) {
@@ -469,6 +473,9 @@ function loadCmsPersistence() {
 // Helper to merge and save only a specific CMS section
 function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
   try {
+    // Take an immutable copy of the incoming sectionData to prevent modification during loadCmsPersistence
+    const snapshot = JSON.parse(JSON.stringify(sectionData));
+
     // 1. Ensure in-memory store has the latest persistent data
     loadCmsPersistence();
 
@@ -477,26 +484,29 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
       for (const key in store.homepageCmsDb) {
         delete (store.homepageCmsDb as any)[key];
       }
-      Object.assign(store.homepageCmsDb, sectionData);
+      Object.assign(store.homepageCmsDb, snapshot);
     } else if (sectionKey === "contactInfoDb") {
       for (const key in store.contactInfoDb) {
         delete (store.contactInfoDb as any)[key];
       }
-      Object.assign(store.contactInfoDb, sectionData);
+      Object.assign(store.contactInfoDb, snapshot);
     } else if (sectionKey === "adminSettingsDb") {
-      Object.assign(store.adminSettingsDb, sectionData);
+      Object.assign(store.adminSettingsDb, snapshot);
     } else if (sectionKey === "mediaDb") {
       store.mediaDb.length = 0;
-      store.mediaDb.push(...sectionData);
+      store.mediaDb.push(...snapshot);
     } else if (sectionKey === "testimonialsDb") {
       store.testimonialsDb.length = 0;
-      store.testimonialsDb.push(...sectionData);
+      store.testimonialsDb.push(...snapshot);
     } else if (sectionKey === "logosDb") {
       store.logosDb.length = 0;
-      store.logosDb.push(...sectionData);
+      store.logosDb.push(...snapshot);
     } else if (sectionKey === "faqsDb") {
       store.faqsDb.length = 0;
-      store.faqsDb.push(...sectionData);
+      store.faqsDb.push(...snapshot);
+    } else if (sectionKey === "packagesDb") {
+      store.packagesDb.length = 0;
+      store.packagesDb.push(...snapshot);
     }
 
     // 3. Prepare the full data payload to write to disk
@@ -507,7 +517,8 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
       mediaDb: store.mediaDb,
       testimonialsDb: store.testimonialsDb,
       logosDb: store.logosDb,
-      faqsDb: store.faqsDb
+      faqsDb: store.faqsDb,
+      packagesDb: store.packagesDb
     };
 
     // 4. Ensure directory exists and write atomically synchronously
@@ -813,6 +824,7 @@ export const PackageRepository = {
         return db.select().from(schema.packages).where(eq(schema.packages.isDeleted, false));
       }
     }
+    loadCmsPersistence();
     return store.packagesDb.filter((p) => !p.isDeleted);
   },
 
@@ -849,6 +861,7 @@ export const PackageRepository = {
     }
 
     store.packagesDb.push(cleanPkg);
+    mergeCmsSectionAndSave("packagesDb", store.packagesDb);
     return cleanPkg;
   },
 
@@ -882,6 +895,7 @@ export const PackageRepository = {
     const index = store.packagesDb.findIndex((p) => p.id === id);
     if (index !== -1) {
       store.packagesDb[index] = { ...store.packagesDb[index], ...cleanUpdates };
+      mergeCmsSectionAndSave("packagesDb", store.packagesDb);
       return store.packagesDb[index];
     }
     return null;
@@ -899,6 +913,7 @@ export const PackageRepository = {
     const index = store.packagesDb.findIndex((p) => p.id === id);
     if (index !== -1) {
       store.packagesDb[index].isDeleted = true;
+      mergeCmsSectionAndSave("packagesDb", store.packagesDb);
       return true;
     }
     return false;
