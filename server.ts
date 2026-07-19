@@ -69,7 +69,21 @@ async function startServer() {
     })
   );
 
-  // Rate Limiting for API routes
+  // Rate Limiting for Login endpoint (specifically for failed attempts)
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Increase max attempts to 20 within 15 minutes
+    message: {
+      success: false,
+      message: "Too many requests from this IP, please try again after 15 minutes.",
+    },
+    standardHeaders: true, // Return standard rate limit info headers
+    legacyHeaders: false, // Disable X-RateLimit-* headers
+    skipSuccessfulRequests: true, // Apply the limiter only to failed login attempts (successful logins do not consume attempts)
+  });
+  app.use("/api/auth/login", loginLimiter);
+
+  // Rate Limiting for other API routes
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
@@ -79,6 +93,7 @@ async function startServer() {
     },
     standardHeaders: true, // Return standard rate limit info headers
     legacyHeaders: false, // Disable X-RateLimit-* headers
+    skip: (req: any) => req.originalUrl?.split("?")[0] === "/api/auth/login",
   });
   app.use("/api", limiter);
 

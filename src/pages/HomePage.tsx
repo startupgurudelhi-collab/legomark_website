@@ -211,6 +211,14 @@ const blogPosts = [
   },
 ];
 
+const DEFAULT_LOGOS = [
+  { id: "logo-custom-01", clientName: "Google Cloud", imageUrl: "https://images.unsplash.com/photo-1572021335469-31706a17aaef?q=80&w=150&auto=format&fit=crop", sortOrder: 1, status: "Active" },
+  { id: "logo-custom-02", clientName: "Microsoft", imageUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=150&auto=format&fit=crop", sortOrder: 2, status: "Active" },
+  { id: "logo-custom-03", clientName: "Amazon Web Services", imageUrl: "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?q=80&w=150&auto=format&fit=crop", sortOrder: 3, status: "Active" },
+  { id: "logo-custom-04", clientName: "Intel Corp", imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=150&auto=format&fit=crop", sortOrder: 4, status: "Active" },
+  { id: "logo-custom-05", clientName: "Salesforce", imageUrl: "https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=150&auto=format&fit=crop", sortOrder: 5, status: "Active" }
+];
+
 const optimizeLogoUrl = (url: string): string => {
   if (!url) return "";
   if (url.includes("unsplash.com")) {
@@ -241,7 +249,7 @@ export default function HomePage() {
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const [activeVideoTitle, setActiveVideoTitle] = useState<string | null>(null);
   const [textCarouselIndex, setTextCarouselIndex] = useState(0);
-  const [logosList, setLogosList] = useState<any[]>([]);
+  const [logosList, setLogosList] = useState<any[]>(DEFAULT_LOGOS);
   const [dynamicTestimonials, setDynamicTestimonials] = useState<any[]>(initialTestimonials);
   const [packages, setPackages] = useState<any[]>([]);
   const [isLoadingPackages, setIsLoadingPackages] = useState(true);
@@ -252,8 +260,11 @@ export default function HomePage() {
       .then(res => res.json())
       .then(res => {
         if (res.success && res.data) {
-          if (res.data.logos) {
-            setLogosList(res.data.logos.filter((l: any) => l.status !== "Inactive"));
+          if (res.data.logos && res.data.logos.length > 0) {
+            const activeLogos = res.data.logos.filter((l: any) => l.status !== "Inactive");
+            if (activeLogos.length > 0) {
+              setLogosList(activeLogos);
+            }
           }
           if (res.data.testimonials) {
             setDynamicTestimonials(res.data.testimonials);

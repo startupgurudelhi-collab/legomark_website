@@ -807,38 +807,101 @@ export const SecurityRepository = {
 // ==========================================
 export const PackageRepository = {
   async getAll() {
-    const db = getDb();
-    if (!db) {
-      throw new Error("Database client is not initialized");
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        return db.select().from(schema.packages).where(eq(schema.packages.isDeleted, false));
+      }
     }
-    return db.select().from(schema.packages).where(eq(schema.packages.isDeleted, false));
+    return store.packagesDb.filter((p) => !p.isDeleted);
   },
 
   async create(pkg: any) {
-    const db = getDb();
-    if (!db) {
-      throw new Error("Database client is not initialized");
+    const cleanPkg = { ...pkg };
+    if (cleanPkg.createdAt) {
+      if (typeof cleanPkg.createdAt === "string") {
+        const parsed = new Date(cleanPkg.createdAt);
+        if (!isNaN(parsed.getTime())) {
+          cleanPkg.createdAt = parsed;
+        }
+      }
+    } else {
+      cleanPkg.createdAt = new Date();
     }
-    await db.insert(schema.packages).values(pkg);
-    return pkg;
+
+    if (cleanPkg.updatedAt) {
+      if (typeof cleanPkg.updatedAt === "string") {
+        const parsed = new Date(cleanPkg.updatedAt);
+        if (!isNaN(parsed.getTime())) {
+          cleanPkg.updatedAt = parsed;
+        }
+      }
+    } else {
+      cleanPkg.updatedAt = new Date();
+    }
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.insert(schema.packages).values(cleanPkg);
+        return pkg;
+      }
+    }
+
+    store.packagesDb.push(cleanPkg);
+    return cleanPkg;
   },
 
   async update(id: string, updates: any) {
-    const db = getDb();
-    if (!db) {
-      throw new Error("Database client is not initialized");
+    const cleanUpdates = { ...updates };
+    if (cleanUpdates.createdAt) {
+      if (typeof cleanUpdates.createdAt === "string") {
+        const parsed = new Date(cleanUpdates.createdAt);
+        if (!isNaN(parsed.getTime())) {
+          cleanUpdates.createdAt = parsed;
+        }
+      }
     }
-    await db.update(schema.packages).set(updates).where(eq(schema.packages.id, id));
-    return { id, ...updates };
+    if (cleanUpdates.updatedAt) {
+      if (typeof cleanUpdates.updatedAt === "string") {
+        const parsed = new Date(cleanUpdates.updatedAt);
+        if (!isNaN(parsed.getTime())) {
+          cleanUpdates.updatedAt = parsed;
+        }
+      }
+    }
+
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.update(schema.packages).set(cleanUpdates).where(eq(schema.packages.id, id));
+        return { id, ...updates };
+      }
+    }
+
+    const index = store.packagesDb.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      store.packagesDb[index] = { ...store.packagesDb[index], ...cleanUpdates };
+      return store.packagesDb[index];
+    }
+    return null;
   },
 
   async delete(id: string) {
-    const db = getDb();
-    if (!db) {
-      throw new Error("Database client is not initialized");
+    if (isDbActive()) {
+      const db = getDb();
+      if (db) {
+        await db.update(schema.packages).set({ isDeleted: true }).where(eq(schema.packages.id, id));
+        return true;
+      }
     }
-    await db.update(schema.packages).set({ isDeleted: true }).where(eq(schema.packages.id, id));
-    return true;
+
+    const index = store.packagesDb.findIndex((p) => p.id === id);
+    if (index !== -1) {
+      store.packagesDb[index].isDeleted = true;
+      return true;
+    }
+    return false;
   }
 };
 

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, useMemo } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Check,
@@ -71,9 +71,9 @@ export default function ServicePage() {
     service = findServiceBySlugOnly(effectiveServiceSlug);
   }
 
-  const services = getEffectiveServices();
-  const categories = getEffectiveCategories();
-  const subcategories = getEffectiveSubcategories();
+  const services = useMemo(() => getEffectiveServices(), []);
+  const categories = useMemo(() => getEffectiveCategories(), []);
+  const subcategories = useMemo(() => getEffectiveSubcategories(), []);
 
   // FAQ interactive state
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
