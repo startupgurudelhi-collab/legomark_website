@@ -249,7 +249,7 @@ export default function HomePage() {
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const [activeVideoTitle, setActiveVideoTitle] = useState<string | null>(null);
   const [textCarouselIndex, setTextCarouselIndex] = useState(0);
-  const [logosList, setLogosList] = useState<any[]>(DEFAULT_LOGOS);
+  const [logosList, setLogosList] = useState<any[]>([]);
   const [dynamicTestimonials, setDynamicTestimonials] = useState<any[]>(initialTestimonials);
   const [packages, setPackages] = useState<any[]>([]);
   const [isLoadingPackages, setIsLoadingPackages] = useState(true);
@@ -264,14 +264,23 @@ export default function HomePage() {
             const activeLogos = res.data.logos.filter((l: any) => l.status !== "Inactive");
             if (activeLogos.length > 0) {
               setLogosList(activeLogos);
+            } else {
+              setLogosList(DEFAULT_LOGOS);
             }
+          } else {
+            setLogosList(DEFAULT_LOGOS);
           }
           if (res.data.testimonials) {
             setDynamicTestimonials(res.data.testimonials);
           }
+        } else {
+          setLogosList(DEFAULT_LOGOS);
         }
       })
-      .catch(err => console.error("Failed to load CMS config on homepage", err));
+      .catch(err => {
+        console.error("Failed to load CMS config on homepage", err);
+        setLogosList(DEFAULT_LOGOS);
+      });
 
     fetch("/api/cms/packages")
       .then(res => res.json())
