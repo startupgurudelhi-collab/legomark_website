@@ -15,7 +15,7 @@ const getJwtSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === "production") {
-      throw new Error("CRITICAL: JWT_SECRET environment variable must be set in production!");
+      throw new Error("CRITICAL: JWT_SECRET environment variable is missing in production environment!");
     }
     return "development_secret_only_for_legomark_india";
   }

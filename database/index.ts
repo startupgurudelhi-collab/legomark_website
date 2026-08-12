@@ -97,7 +97,7 @@ export async function runMigrations(): Promise<boolean> {
     console.log("✅ Database schema migrations applied successfully!");
     return true;
   } catch (err) {
-    console.error("❌ Database schema migration failed:", err);
-    return false;
+    console.error("❌ Database schema migration failed with exact exception:", err);
+    throw err;
   }
 }

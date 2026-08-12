@@ -133,7 +133,10 @@ async function startServer() {
 
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-  // Start HTTP Server immediately!
+  // Begin database connection and migrations BEFORE server starts listening
+  await initializeDatabase();
+
+  // Start HTTP Server
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log("=================================");
     console.log("STEP 5\nHTTP Server Listening");
@@ -141,7 +144,6 @@ async function startServer() {
     console.log("=================================\n");
 
     // Begin background initializations AFTER server has successfully started listening
-    initializeDatabase();
     initializeStorage();
     initializeOptionalServices();
   });
@@ -220,7 +222,7 @@ async function initializeDatabase() {
     return;
   }
 
-  logger.info("Initiating background database connection and migrations...");
+  logger.info("Initiating database connection and migrations...");
   let retries = 5;
   let connected = false;
   
@@ -228,51 +230,21 @@ async function initializeDatabase() {
     try {
       connected = await verifyConnection();
       if (connected) {
-        const migrationsSuccess = await runMigrations();
-        if (migrationsSuccess) {
-          console.log("=================================");
-          console.log("STEP 6\nDatabase Connected");
-          console.log("=================================\n");
-        } else {
-          logger.warn("Database connected, but migrations failed. Server is remaining online.");
-          console.log("=================================");
-          console.log("STEP 6\nDatabase Connected (Migrations Failed)");
-          console.log("=================================\n");
-        }
+        await runMigrations();
+        console.log("=================================");
+        console.log("STEP 6\nDatabase Connected");
+        console.log("=================================\n");
         break;
       }
     } catch (err) {
       logger.error("Error during database initialization attempt:", err);
-    }
-    
-    retries--;
-    if (retries > 0) {
-      logger.warn(`Database connection failed. Retrying in 5 seconds... (${retries} attempts left)`);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
-  }
-
-  if (!connected) {
-    logger.error("❌ Could not connect to MySQL Database after initial retries. Server remains online. Re-trying in the background...");
-    console.log("=================================");
-    console.log("STEP 6\nDatabase Connection Postponed (will retry in background)");
-    console.log("=================================\n");
-    
-    const intervalId = setInterval(async () => {
-      try {
-        const bgConnected = await verifyConnection();
-        if (bgConnected) {
-          logger.info("Background database connection established successfully! Running migrations...");
-          await runMigrations();
-          clearInterval(intervalId);
-        }
-      } catch (err) {
-        logger.error("Background database connection retry failed:", err);
+      retries--;
+      if (retries === 0) {
+        console.error("❌ Permanent database connection/migration failure after all attempts.");
+        throw err;
       }
-    }, 15000);
-
-    if (typeof intervalId.unref === "function") {
-      intervalId.unref();
+      logger.warn(`Database connection/migration failed. Retrying in 5 seconds... (${retries} attempts left)`);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
 }

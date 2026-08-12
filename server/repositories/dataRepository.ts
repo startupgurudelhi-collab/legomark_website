@@ -48,9 +48,11 @@ export const UserRepository = {
         // Verify login query and run SELECT * FROM users WHERE email = ?
         try {
           const results = await db.select().from(schema.users).where(eq(schema.users.email, cleanEmail)).limit(1);
-          return results[0] || null;
+          if (results && results.length > 0) {
+            return results[0];
+          }
         } catch (sqlError: any) {
-          console.error(`❌ SQL query execution failed (SELECT * FROM users WHERE email = '${cleanEmail}'):`, sqlError);
+          console.error(`❌ SQL query execution failed (SELECT * FROM users WHERE email = '${cleanEmail}'):`, sqlError?.message || sqlError);
           throw sqlError;
         }
       }

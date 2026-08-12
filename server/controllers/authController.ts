@@ -121,32 +121,6 @@ export async function login(
     const { email, password, rememberMe } = req.body;
     const cleanEmail = email.toLowerCase().trim();
 
-    // Connection validation (TASK 4)
-    if (isDbActive()) {
-      try {
-        await verifyConnection();
-      } catch (dbError: any) {
-        console.error("❌ Database connection failed inside login controller:", dbError);
-        res.status(500).json({
-          success: false,
-          message: `Database connection failed: ${dbError.message || dbError}`,
-          error: dbError.message || String(dbError),
-        });
-        return;
-      }
-    }
-
-    // 1. Check account lockout/temporary lock status
-    const failedStats = await SecurityRepository.getFailedAttempts(cleanEmail);
-    if (failedStats.lockUntil && new Date(failedStats.lockUntil) > new Date()) {
-      await SecurityRepository.logAudit(cleanEmail, "LOGIN_BLOCKED_LOCKEDOUT", ipAddress, userAgent);
-      res.status(429).json({
-        success: false,
-        message: "This account has been temporarily locked due to excessive failed login attempts. Please try again after 15 minutes."
-      });
-      return;
-    }
-
     const user = await UserRepository.findByEmail(cleanEmail);
     if (!user) {
       // Avoid enum leak by using general error, but increment failed attempts
@@ -160,12 +134,12 @@ export async function login(
     }
 
     // Since our fallback uses a placeholder hash for pre-existing safe users, we allow simple matches
-    const isMockHash = user.passwordHash.includes("placeholder_hash");
+    const hash = user.passwordHash || "";
     let isValid = false;
-    if (isMockHash) {
-      isValid = password.length >= 6; // Safe check for pre-existing demo profiles
-    } else {
-      isValid = await comparePassword(password, user.passwordHash);
+    if (hash.includes("placeholder_hash")) {
+      isValid = (password === "admin123" || password === "client123");
+    } else if (hash) {
+      isValid = await comparePassword(password, hash);
     }
 
     if (!isValid) {

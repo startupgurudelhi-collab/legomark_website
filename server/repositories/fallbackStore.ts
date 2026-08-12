@@ -20,7 +20,7 @@ export const usersDb = [
     id: "usr-admin-01",
     email: "admin@legomark.com",
     fullName: "Lead Admin",
-    passwordHash: "$2a$10$UnX6gO8HjZ9K2.fSgSgSgOnY.g9q8h7d6c5b4a3_placeholder_hash", // hashed
+    passwordHash: "$2b$10$5buTCRlGhgTaPvoyRvRgxOWBwC94OVYrtppHOngXAbwYKtFcONSFW", // admin123
     role: "ADMIN",
     createdAt: new Date("2026-06-01T12:00:00Z").toISOString(),
     updatedAt: new Date("2026-06-01T12:00:00Z").toISOString()
@@ -29,7 +29,7 @@ export const usersDb = [
     id: "usr-client-sunita",
     email: "sunita@deshmukhfoods.co",
     fullName: "Sunita Deshmukh",
-    passwordHash: "$2a$10$UnX6gO8HjZ9K2.fSgSgSgOnY.g9q8h7d6c5b4a3_placeholder_hash",
+    passwordHash: "$2b$10$ymzYiv3klOdVc9wI2rfLA.Nv1XbssD7Z17t9ei1z4jqUhJXfELdLq", // client123
     role: "CLIENT",
     createdAt: new Date("2026-06-01T12:00:00Z").toISOString(),
     updatedAt: new Date("2026-06-01T12:00:00Z").toISOString()
@@ -38,7 +38,7 @@ export const usersDb = [
     id: "usr-client-aman",
     email: "aman@malhotrasports.com",
     fullName: "Aman Malhotra",
-    passwordHash: "$2a$10$UnX6gO8HjZ9K2.fSgSgSgOnY.g9q8h7d6c5b4a3_placeholder_hash",
+    passwordHash: "$2b$10$ymzYiv3klOdVc9wI2rfLA.Nv1XbssD7Z17t9ei1z4jqUhJXfELdLq", // client123
     role: "CLIENT",
     createdAt: new Date("2026-06-01T12:00:00Z").toISOString(),
     updatedAt: new Date("2026-06-01T12:00:00Z").toISOString()
@@ -47,7 +47,7 @@ export const usersDb = [
     id: "usr-client-example",
     email: "client@example.com",
     fullName: "Rahul Sharma",
-    passwordHash: "$2a$10$UnX6gO8HjZ9K2.fSgSgSgOnY.g9q8h7d6c5b4a3_placeholder_hash",
+    passwordHash: "$2b$10$ymzYiv3klOdVc9wI2rfLA.Nv1XbssD7Z17t9ei1z4jqUhJXfELdLq", // client123
     role: "CLIENT",
     createdAt: new Date("2026-06-01T12:00:00Z").toISOString(),
     updatedAt: new Date("2026-06-01T12:00:00Z").toISOString()
