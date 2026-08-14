@@ -6,6 +6,7 @@
 import { User } from "../../shared/types.js";
 
 export * from "../../shared/types.js";
+export * from "../../shared/enums.js";
 export * from "../../shared/validation.js";
 
 export interface AuthState {

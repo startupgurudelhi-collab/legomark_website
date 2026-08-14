@@ -1,0 +1,12 @@
+# Configuration for Nixpacks build tool (used by Coolify, Railway, etc.)
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm-9_x"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "node dist/server.cjs"

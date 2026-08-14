@@ -25,6 +25,9 @@ const router = Router();
 
 router.post("/register", validateBody(registerSchema), register);
 router.post("/login", validateBody(loginSchema), login);
+router.get("/login", (req, res) => {
+  res.status(200).json({ success: true, message: "Legomark Authentication API is online. Submit POST request with JSON body containing email and password." });
+});
 router.post("/refresh", refresh);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);

@@ -23,6 +23,7 @@ async function startServer() {
 
   // Create Express App
   const app = express();
+  app.set("trust proxy", 1); // Trust first proxy (Coolify/Traefik/Nginx/Cloudflare)
   console.log("=================================");
   console.log("STEP 2\nExpress Created");
   console.log("=================================\n");
@@ -36,20 +37,23 @@ async function startServer() {
     res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
   });
 
+  // Enable CORS with preflight on all routes
+  app.use(
+    cors({
+      origin: process.env.CLIENT_URL || true, // Allow same-domain or configured URL
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    })
+  );
+  app.options("*", cors());
+
   // Basic parsing middlewares
   app.use(express.json({ limit: "150mb" }));
   app.use(express.urlencoded({ limit: "150mb", extended: true }));
 
   // Serve uploaded files statically
   app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
-
-  // Enable CORS
-  app.use(
-    cors({
-      origin: process.env.CLIENT_URL || true, // Allow same-domain or configured URL
-      credentials: true,
-    })
-  );
 
   // Configure Helmet security headers
   app.use(
