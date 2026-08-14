@@ -506,7 +506,10 @@ export const CmsConfigService = {
     const testimonials = await CmsConfigRepository.getTestimonials();
     const logos = await CmsConfigRepository.getLogos();
     const faqs = await CmsConfigRepository.getFaqs();
-    return { homepage, contact, settings, media, testimonials, logos, faqs };
+    const navigation = await CmsConfigRepository.getNavigation();
+    const services = await CmsConfigRepository.getServices();
+    const categories = await CmsConfigRepository.getCategories();
+    return { homepage, contact, settings, media, testimonials, logos, faqs, navigation, services, categories };
   },
 
   async getTestimonialsOnly() {
@@ -531,6 +534,18 @@ export const CmsConfigService = {
   },
   async updateFaqs(list: any[]) {
     return CmsConfigRepository.updateFaqs(list);
+  },
+  async updateMediaList(list: any[]) {
+    return CmsConfigRepository.updateMediaList(list);
+  },
+  async updateNavigation(list: any[]) {
+    return CmsConfigRepository.updateNavigation(list);
+  },
+  async updateServices(list: any[]) {
+    return CmsConfigRepository.updateServices(list);
+  },
+  async updateCategories(list: any[]) {
+    return CmsConfigRepository.updateCategories(list);
   },
   async addMediaFile(name: string, folder: string, size: string, url: string, type: "image" | "document" | "other" = "document") {
     const file = {

@@ -245,6 +245,80 @@ export async function seedDatabaseIfEmpty(): Promise<void> {
       console.warn("⚠️ Blog seeding skipped:", blogErr);
     }
 
+    // 6. Check and Seed Client Logos
+    try {
+      const logoCountResult = await db.select({ value: count() }).from(schema.clientLogos);
+      const logoCount = Number(logoCountResult[0]?.value || 0);
+
+      if (logoCount === 0) {
+        console.log("📝 Seeding initial client logos...");
+        for (const logo of fallback.logosDb) {
+          await db.insert(schema.clientLogos).values({
+            id: logo.id,
+            clientName: logo.clientName,
+            imageUrl: logo.imageUrl,
+            sortOrder: logo.sortOrder,
+            status: logo.status || "Active",
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }).onConflictDoNothing();
+        }
+        console.log("✅ Client logos seeded successfully.");
+      }
+    } catch (logoErr) {
+      console.warn("⚠️ Logo seeding skipped:", logoErr);
+    }
+
+    // 7. Check and Seed Homepage Sections
+    try {
+      const hpCountResult = await db.select({ value: count() }).from(schema.homepageSections);
+      const hpCount = Number(hpCountResult[0]?.value || 0);
+
+      if (hpCount === 0) {
+        console.log("📝 Seeding default homepage sections...");
+        await db.insert(schema.homepageSections).values({
+          id: "hp-default",
+          sectionKey: "homepage",
+          title: fallback.homepageCmsDb.heroTitle,
+          subtitle: fallback.homepageCmsDb.heroSub,
+          badge: fallback.homepageCmsDb.heroBadge,
+          content: fallback.homepageCmsDb,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }).onConflictDoNothing();
+        console.log("✅ Default homepage layout seeded successfully.");
+      }
+    } catch (hpErr) {
+      console.warn("⚠️ Homepage section seeding skipped:", hpErr);
+    }
+
+    // 8. Check and Seed CMS Settings (Testimonials, Contact, Media, FAQs, Admin Settings)
+    try {
+      const defaultSettings = [
+        { key: "testimonialsDb", value: fallback.testimonialsDb },
+        { key: "contactInfoDb", value: fallback.contactInfoDb },
+        { key: "adminSettingsDb", value: fallback.adminSettingsDb },
+        { key: "mediaDb", value: fallback.mediaDb },
+        { key: "faqsDb", value: fallback.faqsDb }
+      ];
+
+      for (const setting of defaultSettings) {
+        const existing = await db.select().from(schema.cmsSettings).where(eq(schema.cmsSettings.key, setting.key)).limit(1);
+        if (!existing || existing.length === 0) {
+          await db.insert(schema.cmsSettings).values({
+            id: `set-${setting.key}`,
+            key: setting.key,
+            value: setting.value,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          }).onConflictDoNothing();
+        }
+      }
+      console.log("✅ CMS dynamic settings verified.");
+    } catch (settingErr) {
+      console.warn("⚠️ CMS settings seeding skipped:", settingErr);
+    }
+
     console.log("✨ PostgreSQL Database verification & non-destructive seed completed.");
   } catch (error) {
     console.error("❌ Error during database seeding sequence (non-fatal):", error);

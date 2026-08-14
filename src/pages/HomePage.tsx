@@ -254,33 +254,38 @@ export default function HomePage() {
   const [packages, setPackages] = useState<any[]>([]);
   const [isLoadingPackages, setIsLoadingPackages] = useState(true);
 
-  // Load client logos and testimonials from CMS on mount
+  // Load client logos and testimonials from CMS on mount and listen for live updates
   useEffect(() => {
-    fetch("/api/cms/config")
-      .then(res => res.json())
-      .then(res => {
-        if (res.success && res.data) {
-          if (res.data.logos && res.data.logos.length > 0) {
-            const activeLogos = res.data.logos.filter((l: any) => l.status !== "Inactive");
-            if (activeLogos.length > 0) {
-              setLogosList(activeLogos);
+    const fetchCmsData = () => {
+      fetch("/api/cms/config")
+        .then(res => res.json())
+        .then(res => {
+          if (res.success && res.data) {
+            if (res.data.logos && res.data.logos.length > 0) {
+              const activeLogos = res.data.logos.filter((l: any) => l.status !== "Inactive");
+              if (activeLogos.length > 0) {
+                setLogosList(activeLogos);
+              } else {
+                setLogosList(DEFAULT_LOGOS);
+              }
             } else {
               setLogosList(DEFAULT_LOGOS);
+            }
+            if (res.data.testimonials) {
+              setDynamicTestimonials(res.data.testimonials);
             }
           } else {
             setLogosList(DEFAULT_LOGOS);
           }
-          if (res.data.testimonials) {
-            setDynamicTestimonials(res.data.testimonials);
-          }
-        } else {
+        })
+        .catch(err => {
+          console.error("Failed to load CMS config on homepage", err);
           setLogosList(DEFAULT_LOGOS);
-        }
-      })
-      .catch(err => {
-        console.error("Failed to load CMS config on homepage", err);
-        setLogosList(DEFAULT_LOGOS);
-      });
+        });
+    };
+
+    fetchCmsData();
+    window.addEventListener("brand-media-updated", fetchCmsData);
 
     fetch("/api/cms/packages")
       .then(res => res.json())
@@ -299,6 +304,10 @@ export default function HomePage() {
       .finally(() => {
         setIsLoadingPackages(false);
       });
+
+    return () => {
+      window.removeEventListener("brand-media-updated", fetchCmsData);
+    };
   }, []);
 
   const videoTestimonials = dynamicTestimonials.filter(t => t.videoUrl && t.videoUrl.trim() !== "" && t.status !== "Draft");

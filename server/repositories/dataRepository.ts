@@ -511,6 +511,18 @@ function loadCmsPersistence() {
           store.packagesDb.length = 0;
           store.packagesDb.push(...data.packagesDb);
         }
+        if (data.headerMenuDb) {
+          store.headerMenuDb.length = 0;
+          store.headerMenuDb.push(...data.headerMenuDb);
+        }
+        if (data.servicesDb) {
+          store.servicesDb.length = 0;
+          store.servicesDb.push(...data.servicesDb);
+        }
+        if (data.categoriesDb) {
+          store.categoriesDb.length = 0;
+          store.categoriesDb.push(...data.categoriesDb);
+        }
       }
     }
   } catch (err) {
@@ -555,6 +567,15 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
     } else if (sectionKey === "packagesDb") {
       store.packagesDb.length = 0;
       store.packagesDb.push(...snapshot);
+    } else if (sectionKey === "headerMenuDb") {
+      store.headerMenuDb.length = 0;
+      store.headerMenuDb.push(...snapshot);
+    } else if (sectionKey === "servicesDb") {
+      store.servicesDb.length = 0;
+      store.servicesDb.push(...snapshot);
+    } else if (sectionKey === "categoriesDb") {
+      store.categoriesDb.length = 0;
+      store.categoriesDb.push(...snapshot);
     }
 
     // 3. Prepare the full data payload to write to disk
@@ -566,7 +587,10 @@ function mergeCmsSectionAndSave(sectionKey: string, sectionData: any) {
       testimonialsDb: store.testimonialsDb,
       logosDb: store.logosDb,
       faqsDb: store.faqsDb,
-      packagesDb: store.packagesDb
+      packagesDb: store.packagesDb,
+      headerMenuDb: store.headerMenuDb,
+      servicesDb: store.servicesDb,
+      categoriesDb: store.categoriesDb
     };
 
     // 4. Ensure directory exists and write atomically synchronously
@@ -640,9 +664,13 @@ export const CmsConfigRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        const results = await db.select().from(schema.homepageSections).where(eq(schema.homepageSections.sectionKey, "homepage")).limit(1);
-        if (results[0]) {
-          return mapHomepageFromDb(results[0]);
+        try {
+          const results = await db.select().from(schema.homepageSections).where(eq(schema.homepageSections.sectionKey, "homepage")).limit(1);
+          if (results[0]) {
+            return mapHomepageFromDb(results[0]);
+          }
+        } catch (dbErr) {
+          console.warn("⚠️ getHomepage from DB fallback:", dbErr);
         }
       }
     }
@@ -653,20 +681,23 @@ export const CmsConfigRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        const dbUpdates = mapHomepageToDb(updates);
-        const existing = await db.select().from(schema.homepageSections).where(eq(schema.homepageSections.sectionKey, "homepage")).limit(1);
-        if (existing[0]) {
-          await db.update(schema.homepageSections).set(dbUpdates).where(eq(schema.homepageSections.sectionKey, "homepage"));
-        } else {
-          await db.insert(schema.homepageSections).values({
-            id: `hp-${Math.floor(100 + Math.random() * 900)}`,
-            sectionKey: "homepage",
-            ...dbUpdates,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          });
+        try {
+          const dbUpdates = mapHomepageToDb(updates);
+          const existing = await db.select().from(schema.homepageSections).where(eq(schema.homepageSections.sectionKey, "homepage")).limit(1);
+          if (existing[0]) {
+            await db.update(schema.homepageSections).set(dbUpdates).where(eq(schema.homepageSections.sectionKey, "homepage"));
+          } else {
+            await db.insert(schema.homepageSections).values({
+              id: `hp-${Math.floor(100 + Math.random() * 900)}`,
+              sectionKey: "homepage",
+              ...dbUpdates,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          }
+        } catch (dbErr) {
+          console.warn("⚠️ updateHomepage in DB failed:", dbErr);
         }
-        return updates;
       }
     }
     mergeCmsSectionAndSave("homepageCmsDb", updates);
@@ -682,8 +713,11 @@ export const CmsConfigRepository = {
   },
   async updateContact(updates: any) {
     if (isDbActive()) {
-      await updateSettingInDb("contactInfoDb", updates);
-      return updates;
+      try {
+        await updateSettingInDb("contactInfoDb", updates);
+      } catch (dbErr) {
+        console.warn("⚠️ updateContact in DB failed:", dbErr);
+      }
     }
     mergeCmsSectionAndSave("contactInfoDb", updates);
     return store.contactInfoDb;
@@ -698,8 +732,11 @@ export const CmsConfigRepository = {
   },
   async updateSettings(updates: any) {
     if (isDbActive()) {
-      await updateSettingInDb("adminSettingsDb", updates);
-      return updates;
+      try {
+        await updateSettingInDb("adminSettingsDb", updates);
+      } catch (dbErr) {
+        console.warn("⚠️ updateSettings in DB failed:", dbErr);
+      }
     }
     mergeCmsSectionAndSave("adminSettingsDb", updates);
     return store.adminSettingsDb;
@@ -712,12 +749,26 @@ export const CmsConfigRepository = {
     loadCmsPersistence();
     return store.mediaDb;
   },
+  async updateMediaList(list: any[]) {
+    if (isDbActive()) {
+      try {
+        await updateSettingInDb("mediaDb", list);
+      } catch (dbErr) {
+        console.warn("⚠️ updateMediaList in DB failed:", dbErr);
+      }
+    }
+    mergeCmsSectionAndSave("mediaDb", list);
+    return store.mediaDb;
+  },
   async addMedia(file: any) {
     if (isDbActive()) {
-      const current = await getSettingFromDb("mediaDb", []) || [];
-      const updatedMedia = [...current, file];
-      await updateSettingInDb("mediaDb", updatedMedia);
-      return file;
+      try {
+        const current = await getSettingFromDb("mediaDb", []) || [];
+        const updatedMedia = [...current, file];
+        await updateSettingInDb("mediaDb", updatedMedia);
+      } catch (dbErr) {
+        console.warn("⚠️ addMedia in DB failed:", dbErr);
+      }
     }
     loadCmsPersistence();
     const updatedMedia = [...store.mediaDb, file];
@@ -734,8 +785,11 @@ export const CmsConfigRepository = {
   },
   async updateTestimonials(list: any[]) {
     if (isDbActive()) {
-      await updateSettingInDb("testimonialsDb", list);
-      return list;
+      try {
+        await updateSettingInDb("testimonialsDb", list);
+      } catch (dbErr) {
+        console.warn("⚠️ updateTestimonials in DB failed:", dbErr);
+      }
     }
     mergeCmsSectionAndSave("testimonialsDb", list);
     return store.testimonialsDb;
@@ -744,15 +798,19 @@ export const CmsConfigRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        const results = await db.select().from(schema.clientLogos).orderBy(schema.clientLogos.sortOrder);
-        if (results.length > 0) {
-          return results.map((row: any) => ({
-            id: row.id,
-            clientName: row.clientName,
-            imageUrl: row.imageUrl,
-            sortOrder: row.sortOrder,
-            status: row.status
-          }));
+        try {
+          const results = await db.select().from(schema.clientLogos).orderBy(schema.clientLogos.sortOrder);
+          if (results && results.length > 0) {
+            return results.map((row: any) => ({
+              id: row.id,
+              clientName: row.clientName,
+              imageUrl: row.imageUrl,
+              sortOrder: row.sortOrder,
+              status: row.status
+            }));
+          }
+        } catch (dbErr) {
+          console.warn("⚠️ getLogos from DB failed:", dbErr);
         }
       }
     }
@@ -763,19 +821,22 @@ export const CmsConfigRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        await db.delete(schema.clientLogos);
-        for (const item of list) {
-          await db.insert(schema.clientLogos).values({
-            id: item.id || `logo-custom-${Math.floor(100 + Math.random() * 900)}`,
-            clientName: item.clientName || "Client Logo",
-            imageUrl: item.imageUrl || "",
-            sortOrder: item.sortOrder || 0,
-            status: item.status || "Active",
-            createdAt: new Date(),
-            updatedAt: new Date()
-          });
+        try {
+          await db.delete(schema.clientLogos);
+          for (const item of list) {
+            await db.insert(schema.clientLogos).values({
+              id: item.id || `logo-custom-${Math.floor(100 + Math.random() * 900)}`,
+              clientName: item.clientName || "Client Logo",
+              imageUrl: item.imageUrl || "",
+              sortOrder: item.sortOrder || 0,
+              status: item.status || "Active",
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          }
+        } catch (dbErr) {
+          console.warn("⚠️ updateLogos in DB failed:", dbErr);
         }
-        return list;
       }
     }
     mergeCmsSectionAndSave("logosDb", list);
@@ -791,11 +852,71 @@ export const CmsConfigRepository = {
   },
   async updateFaqs(list: any[]) {
     if (isDbActive()) {
-      await updateSettingInDb("faqsDb", list);
-      return list;
+      try {
+        await updateSettingInDb("faqsDb", list);
+      } catch (dbErr) {
+        console.warn("⚠️ updateFaqs in DB failed:", dbErr);
+      }
     }
     mergeCmsSectionAndSave("faqsDb", list);
     return store.faqsDb;
+  },
+  async getNavigation() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("headerMenuDb", null);
+      if (val) return val;
+    }
+    loadCmsPersistence();
+    return store.headerMenuDb;
+  },
+  async updateNavigation(list: any[]) {
+    if (isDbActive()) {
+      try {
+        await updateSettingInDb("headerMenuDb", list);
+      } catch (dbErr) {
+        console.warn("⚠️ updateNavigation in DB failed:", dbErr);
+      }
+    }
+    mergeCmsSectionAndSave("headerMenuDb", list);
+    return store.headerMenuDb;
+  },
+  async getServices() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("servicesDb", null);
+      if (val) return val;
+    }
+    loadCmsPersistence();
+    return store.servicesDb;
+  },
+  async updateServices(list: any[]) {
+    if (isDbActive()) {
+      try {
+        await updateSettingInDb("servicesDb", list);
+      } catch (dbErr) {
+        console.warn("⚠️ updateServices in DB failed:", dbErr);
+      }
+    }
+    mergeCmsSectionAndSave("servicesDb", list);
+    return store.servicesDb;
+  },
+  async getCategories() {
+    if (isDbActive()) {
+      const val = await getSettingFromDb("categoriesDb", null);
+      if (val) return val;
+    }
+    loadCmsPersistence();
+    return store.categoriesDb;
+  },
+  async updateCategories(list: any[]) {
+    if (isDbActive()) {
+      try {
+        await updateSettingInDb("categoriesDb", list);
+      } catch (dbErr) {
+        console.warn("⚠️ updateCategories in DB failed:", dbErr);
+      }
+    }
+    mergeCmsSectionAndSave("categoriesDb", list);
+    return store.categoriesDb;
   }
 };
 

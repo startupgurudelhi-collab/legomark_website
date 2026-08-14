@@ -17,8 +17,9 @@ let dbInstance: any = null;
 
 // Helper to parse connection config
 export function getConnectionConfig(): pg.PoolConfig {
-  const dbUrl = process.env.DATABASE_URL;
+  const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   const isSsl = process.env.DB_SSL === "true" ||
+    process.env.SQL_SSL === "true" ||
     process.env.PGSSLMODE === "require" ||
     (typeof dbUrl === "string" && (dbUrl.includes("sslmode=require") || dbUrl.includes("ssl=true")));
 
@@ -33,11 +34,11 @@ export function getConnectionConfig(): pg.PoolConfig {
   }
 
   // Fallback to individual variables or localhost default
-  const host = process.env.DB_HOST || "127.0.0.1";
-  const port = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432;
-  const user = process.env.DB_USER || "postgres";
-  const password = process.env.DB_PASSWORD || "";
-  const database = process.env.DB_NAME || "legomark_india";
+  const host = process.env.SQL_HOST || process.env.DB_HOST || "127.0.0.1";
+  const port = process.env.SQL_PORT ? parseInt(process.env.SQL_PORT, 10) : (process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432);
+  const user = process.env.SQL_USER || process.env.DB_USER || "postgres";
+  const password = process.env.SQL_PASSWORD || process.env.DB_PASSWORD || "";
+  const database = process.env.SQL_DB_NAME || process.env.DB_NAME || "legomark_india";
 
   return {
     host,

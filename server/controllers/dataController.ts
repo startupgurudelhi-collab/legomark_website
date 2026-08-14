@@ -426,6 +426,42 @@ export const CmsConfigController = {
     }
   },
 
+  async updateMedia(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await CmsConfigService.updateMediaList(req.body);
+      return sendSuccess(res, "Media library updated successfully", data);
+    } catch (err) {
+      return sendError(res, err, "Failed to update media library");
+    }
+  },
+
+  async updateNavigation(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await CmsConfigService.updateNavigation(req.body);
+      return sendSuccess(res, "Header & navigation menu updated successfully", data);
+    } catch (err) {
+      return sendError(res, err, "Failed to update navigation menu");
+    }
+  },
+
+  async updateServices(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await CmsConfigService.updateServices(req.body);
+      return sendSuccess(res, "Services catalog saved successfully", data);
+    } catch (err) {
+      return sendError(res, err, "Failed to update services catalog");
+    }
+  },
+
+  async updateCategories(req: Request, res: Response, next: NextFunction) {
+    try {
+      const data = await CmsConfigService.updateCategories(req.body);
+      return sendSuccess(res, "Service categories saved successfully", data);
+    } catch (err) {
+      return sendError(res, err, "Failed to update service categories");
+    }
+  },
+
   async uploadMedia(req: Request, res: Response, next: NextFunction) {
     try {
       const { name, folder, size, url, type } = req.body;

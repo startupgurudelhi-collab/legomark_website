@@ -877,4 +877,8 @@ export const packagesDb: FallbackPackage[] = [
   }
 ];
 
+export const headerMenuDb: any[] = [];
+export const servicesDb: any[] = [];
+export const categoriesDb: any[] = [];
+
 

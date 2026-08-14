@@ -224,14 +224,17 @@ export default function AdminPage() {
         if (blogsRes.success && blogsRes.data) setBlogs(blogsRes.data);
         
         if (cmsRes.success && cmsRes.data) {
-          const { homepage, contact, settings, media, testimonials, logos, faqs } = cmsRes.data;
+          const { homepage, contact, settings, media, testimonials, logos, faqs, navigation, services, categories } = cmsRes.data;
           if (homepage) setHomepageCms(homepage);
           if (contact) setContactInfo(contact);
           if (settings) setAdminSettings(settings);
-          if (media) setMediaFiles(media);
-          if (testimonials) setTestimonials(testimonials);
-          if (logos) setLogos(logos);
-          if (faqs) setFaqs(faqs);
+          if (media && media.length > 0) setMediaFiles(media);
+          if (testimonials && testimonials.length > 0) setTestimonials(testimonials);
+          if (logos && logos.length > 0) setLogos(logos);
+          if (faqs && faqs.length > 0) setFaqs(faqs);
+          if (navigation && navigation.length > 0) setHeaderMenu(navigation);
+          if (services && services.length > 0) setServicesList(services);
+          if (categories && categories.length > 0) setCategoriesList(categories);
         }
       } catch (err) {
         console.warn("Backend API sync fallback: server data unavailable.", err);
@@ -283,6 +286,8 @@ export default function AdminPage() {
         },
         body: JSON.stringify(updated)
       });
+      // Broadcast to update other components live
+      window.dispatchEvent(new Event("brand-media-updated"));
     } catch (err) {
       console.error("Failed to sync client logos to server", err);
     }
@@ -336,6 +341,105 @@ export default function AdminPage() {
       });
     } catch (err) {
       console.error("Failed to sync contact info to server", err);
+    }
+  };
+
+  const handleUpdateServices = async (updated: ServiceData[]) => {
+    setServicesList(updated);
+    localStorage.setItem("legomark_admin_services", JSON.stringify(updated));
+    const token = localStorage.getItem("efilingg_token");
+    try {
+      await fetch("/api/cms/services", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify(updated)
+      });
+      window.dispatchEvent(new Event("brand-media-updated"));
+    } catch (err) {
+      console.error("Failed to sync services to server", err);
+    }
+  };
+
+  const handleUpdateCategories = async (updated: Category[]) => {
+    setCategoriesList(updated);
+    localStorage.setItem("legomark_admin_categories", JSON.stringify(updated));
+    const token = localStorage.getItem("efilingg_token");
+    try {
+      await fetch("/api/cms/categories", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify(updated)
+      });
+      window.dispatchEvent(new Event("brand-media-updated"));
+    } catch (err) {
+      console.error("Failed to sync categories to server", err);
+    }
+  };
+
+  const handleUpdateSubcategories = async (updated: Subcategory[]) => {
+    setSubcategoriesList(updated);
+    localStorage.setItem("legomark_admin_subcategories", JSON.stringify(updated));
+  };
+
+  const handleUpdateMenu = async (updated: MenuItem[]) => {
+    setHeaderMenu(updated);
+    setStoredState("menu", updated);
+    const token = localStorage.getItem("efilingg_token");
+    try {
+      await fetch("/api/cms/navigation", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify(updated)
+      });
+      window.dispatchEvent(new Event("brand-media-updated"));
+    } catch (err) {
+      console.error("Failed to sync navigation menu to server", err);
+    }
+  };
+
+  const handleUpdateMedia = async (updated: MediaFile[]) => {
+    setMediaFiles(updated);
+    setStoredState("media", updated);
+    const token = localStorage.getItem("efilingg_token");
+    try {
+      await fetch("/api/cms/media", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify(updated)
+      });
+    } catch (err) {
+      console.error("Failed to sync media list to server", err);
+    }
+  };
+
+  const handleUpdateSettings = async (updated: SettingsType) => {
+    setAdminSettings(updated);
+    setStoredState("settings", updated);
+    const token = localStorage.getItem("efilingg_token");
+    try {
+      await fetch("/api/cms/settings", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify(updated)
+      });
+      window.dispatchEvent(new Event("brand-media-updated"));
+    } catch (err) {
+      console.error("Failed to sync settings to server", err);
     }
   };
   
@@ -754,11 +858,11 @@ export default function AdminPage() {
           {activeTab === "services" && (
             <ServicesTab
               services={servicesList}
-              onUpdateServices={setServicesList}
+              onUpdateServices={handleUpdateServices}
               categories={categoriesList}
-              onUpdateCategories={setCategoriesList}
+              onUpdateCategories={handleUpdateCategories}
               subcategories={subcategoriesList}
-              onUpdateSubcategories={setSubcategoriesList}
+              onUpdateSubcategories={handleUpdateSubcategories}
             />
           )}
 
@@ -808,21 +912,21 @@ export default function AdminPage() {
           {activeTab === "navigation" && (
             <NavigationTab
               menuItems={headerMenu}
-              onUpdateMenu={setHeaderMenu}
+              onUpdateMenu={handleUpdateMenu}
             />
           )}
 
           {activeTab === "media" && (
             <MediaTab
               mediaFiles={mediaFiles}
-              onUpdateMedia={setMediaFiles}
+              onUpdateMedia={handleUpdateMedia}
             />
           )}
 
           {activeTab === "settings" && (
             <SettingsTab
               settings={adminSettings}
-              onUpdateSettings={setAdminSettings}
+              onUpdateSettings={handleUpdateSettings}
             />
           )}
         </main>
