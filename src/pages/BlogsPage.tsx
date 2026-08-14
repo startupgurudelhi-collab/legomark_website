@@ -818,7 +818,7 @@ This slot represents a fully functional structural placeholder within the Legoma
 ### Connecting Your CMS:
 1. Navigate to the **Admin Portal / CMS Dashboard**.
 2. Create an article entry with title, author details, content, and category set to **${category}**.
-3. Link the backend database (Firestore or MySQL) API endpoint.
+3. Link the backend database (PostgreSQL) API endpoint.
 4. The frontend will dynamically replace this placeholder with live editorial content instantly.
     `
   };

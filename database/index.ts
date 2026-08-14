@@ -3,26 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { drizzle } from "drizzle-orm/mysql2";
-import { migrate } from "drizzle-orm/mysql2/migrator";
-import mysql from "mysql2/promise";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import pg from "pg";
 import path from "path";
 import * as schema from "./schema.js";
 
-let pool: mysql.Pool | null = null;
+const { Pool } = pg;
+
+let pool: pg.Pool | null = null;
 let dbInstance: any = null;
 
 // Helper to parse connection config
 export function getConnectionConfig() {
   const dbUrl = process.env.DATABASE_URL;
-  if (dbUrl && (dbUrl.startsWith("mysql://") || dbUrl.startsWith("mysqls://"))) {
-    return dbUrl;
+  if (dbUrl && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://"))) {
+    return {
+      connectionString: dbUrl,
+      max: 10,
+    };
   }
 
   // Fallback to individual variables or localhost default
   const host = process.env.DB_HOST || "127.0.0.1";
-  const port = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
-  const user = process.env.DB_USER || "root";
+  const port = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 5432;
+  const user = process.env.DB_USER || "postgres";
   const password = process.env.DB_PASSWORD || "";
   const database = process.env.DB_NAME || "legomark_india";
 
@@ -32,8 +37,7 @@ export function getConnectionConfig() {
     user,
     password,
     database,
-    connectionLimit: 10,
-    waitForConnections: true,
+    max: 10,
   };
 }
 
@@ -42,17 +46,17 @@ export function getDb() {
 
   try {
     const config = getConnectionConfig();
-    pool = typeof config === "string" ? mysql.createPool(config) : mysql.createPool(config);
-    dbInstance = drizzle(pool, { schema, mode: "default" });
+    pool = pool || new Pool(config);
+    dbInstance = drizzle(pool, { schema });
     
-    // Call verifyConnection and log EXACT mysql2 error if it fails
+    // Call verifyConnection and log PostgreSQL error if it fails
     verifyConnection().catch((err) => {
       console.error("❌ Pre-initialization verifyConnection failure:", err);
     });
 
     return dbInstance;
   } catch (error) {
-    console.error("❌ Failed to initialize database client:", error);
+    console.error("❌ Failed to initialize PostgreSQL database client:", error);
     return null;
   }
 }
@@ -63,19 +67,19 @@ export function getDb() {
  */
 export async function verifyConnection(): Promise<boolean> {
   const config = getConnectionConfig();
-  const activePool = pool || (typeof config === "string" ? mysql.createPool(config) : mysql.createPool(config));
+  const activePool = pool || new Pool(config);
 
   try {
-    const connection = await activePool.getConnection();
-    const [rows]: any = await connection.query("SELECT 1 as connected");
-    connection.release();
-    const isConnected = rows && rows[0] && (rows[0].connected === 1 || rows[0].connected === "1");
+    const client = await activePool.connect();
+    const result = await client.query("SELECT 1 as connected");
+    client.release();
+    const isConnected = result && result.rows && result.rows[0] && (result.rows[0].connected === 1 || result.rows[0].connected === "1" || result.rows[0].connected === true);
     if (isConnected) {
-      console.log("✅ MySQL Database connection verified successfully!");
+      console.log("✅ PostgreSQL Database connection verified successfully!");
     }
     return !!isConnected;
   } catch (err) {
-    console.error("❌ MySQL Database connection verification failed:", err);
+    console.error("❌ PostgreSQL Database connection verification failed:", err);
     throw err;
   }
 }
@@ -90,7 +94,7 @@ export async function runMigrations(): Promise<boolean> {
     return false;
   }
   try {
-    console.log("🔄 Starting database schema migration (Drizzle MySQL)...");
+    console.log("🔄 Starting database schema migration (Drizzle PostgreSQL)...");
     await migrate(db, {
       migrationsFolder: path.join(process.cwd(), "database/migrations"),
     });
@@ -101,3 +105,4 @@ export async function runMigrations(): Promise<boolean> {
     throw err;
   }
 }
+

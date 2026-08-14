@@ -208,7 +208,7 @@ function printRoutes(app: express.Express) {
 }
 
 /**
- * Initializes the MySQL connection and applies schema migrations in a non-blocking background task
+ * Initializes the PostgreSQL connection and applies schema migrations in startup sequence
  */
 async function initializeDatabase() {
   const dbUrl = process.env.DATABASE_URL;
