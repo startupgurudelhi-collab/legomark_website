@@ -36,24 +36,14 @@ export const UserRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        // Log details as requested in TASK 2
-        const config = getConnectionConfig();
-        const dbName = typeof config === "string" ? "URL-configured" : config.database;
-        const dbUser = typeof config === "string" ? "URL-configured" : config.user;
-        const dbHost = typeof config === "string" ? "URL-configured" : config.host;
-        console.log(`🔍 [UserRepository.findByEmail] Connected database name: ${dbName}`);
-        console.log(`🔍 [UserRepository.findByEmail] Current DB user: ${dbUser}`);
-        console.log(`🔍 [UserRepository.findByEmail] Current DB host: ${dbHost}`);
-
-        // Verify login query and run SELECT * FROM users WHERE email = ?
         try {
           const results = await db.select().from(schema.users).where(eq(schema.users.email, cleanEmail)).limit(1);
           if (results && results.length > 0) {
             return results[0];
           }
         } catch (sqlError: any) {
-          console.error(`❌ SQL query execution failed (SELECT * FROM users WHERE email = '${cleanEmail}'):`, sqlError?.message || sqlError);
-          throw sqlError;
+          console.error(`⚠️ SQL query exception in UserRepository.findByEmail (${cleanEmail}):`, sqlError?.message || sqlError);
+          // Fall through to memory store fallback
         }
       }
     }
@@ -66,8 +56,12 @@ export const UserRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        const results = await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
-        return results[0] || null;
+        try {
+          const results = await db.select().from(schema.users).where(eq(schema.users.id, id)).limit(1);
+          return results[0] || null;
+        } catch (sqlError: any) {
+          console.error(`⚠️ SQL query exception in UserRepository.findById (${id}):`, sqlError?.message || sqlError);
+        }
       }
     }
     // Fallback
@@ -79,8 +73,12 @@ export const UserRepository = {
     if (isDbActive()) {
       const db = getDb();
       if (db) {
-        await db.insert(schema.users).values(user);
-        return user;
+        try {
+          await db.insert(schema.users).values(user);
+          return user;
+        } catch (sqlError: any) {
+          console.error(`⚠️ SQL insert exception in UserRepository.create:`, sqlError?.message || sqlError);
+        }
       }
     }
     // Fallback

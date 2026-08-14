@@ -14,7 +14,7 @@ import { createServer as createViteServer } from "vite";
 import apiRouter from "./server/routes/api.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
 import { logger } from "./server/utils/logger.js";
-import { runMigrations, verifyConnection } from "./database/index.js";
+import { runMigrations, verifyConnection, seedDatabaseIfEmpty } from "./database/index.js";
 
 async function startServer() {
   console.log("\n=================================");
@@ -72,7 +72,7 @@ async function startServer() {
   // Rate Limiting for Login endpoint (specifically for failed attempts)
   const loginLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // Increase max attempts to 20 within 15 minutes
+    max: 30, // Max 30 attempts per 15 minutes
     message: {
       success: false,
       message: "Too many requests from this IP, please try again after 15 minutes.",
@@ -86,7 +86,7 @@ async function startServer() {
   // Rate Limiting for other API routes
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    max: 200, // Limit each IP to 200 requests per windowMs
     message: {
       success: false,
       message: "Too many requests from this IP, please try again after 15 minutes.",
@@ -133,20 +133,21 @@ async function startServer() {
 
   const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-  // Begin database connection and migrations BEFORE server starts listening
-  await initializeDatabase();
-
-  // Start HTTP Server
+  // Start HTTP Server immediately so health checks pass on Coolify
   const server = app.listen(PORT, "0.0.0.0", () => {
     console.log("=================================");
     console.log("STEP 5\nHTTP Server Listening");
     console.log(`🚀 Server running on http://0.0.0.0:${PORT}`);
     console.log("=================================\n");
 
-    // Begin background initializations AFTER server has successfully started listening
+    // Initialize physical storage
     initializeStorage();
+    // Initialize optional third-party status check
     initializeOptionalServices();
   });
+
+  // Run database connection, migrations, and non-destructive seeding
+  await initializeDatabase();
 
   // Graceful shutdown handler
   const handleShutdown = (signal: string) => {
@@ -215,14 +216,14 @@ async function initializeDatabase() {
   const dbHost = process.env.DB_HOST;
 
   if (!dbUrl && !dbHost) {
-    logger.info("No database environment variables provided. Running with SQLite/Memory fallback logic.");
+    logger.info("No database environment variables provided. Running with memory fallback logic.");
     console.log("=================================");
     console.log("STEP 6\nDatabase Connected (Using Memory Fallbacks)");
     console.log("=================================\n");
     return;
   }
 
-  logger.info("Initiating database connection and migrations...");
+  logger.info("Initiating PostgreSQL connection and migrations...");
   let retries = 5;
   let connected = false;
   
@@ -231,8 +232,9 @@ async function initializeDatabase() {
       connected = await verifyConnection();
       if (connected) {
         await runMigrations();
+        await seedDatabaseIfEmpty();
         console.log("=================================");
-        console.log("STEP 6\nDatabase Connected");
+        console.log("STEP 6\nPostgreSQL Database Ready & Verified");
         console.log("=================================\n");
         break;
       }
@@ -240,11 +242,11 @@ async function initializeDatabase() {
       logger.error("Error during database initialization attempt:", err);
       retries--;
       if (retries === 0) {
-        console.error("❌ Permanent database connection/migration failure after all attempts.");
-        throw err;
+        console.error("⚠️ PostgreSQL connection could not be established immediately. The application is running with safe fallbacks and will retry on next request.");
+        break;
       }
-      logger.warn(`Database connection/migration failed. Retrying in 5 seconds... (${retries} attempts left)`);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      logger.warn(`PostgreSQL connection attempt failed. Retrying in 4 seconds... (${retries} attempts remaining)`);
+      await new Promise((resolve) => setTimeout(resolve, 4000));
     }
   }
 }

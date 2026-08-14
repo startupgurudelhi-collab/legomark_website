@@ -51,9 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(credentials),
       });
 
-      const result = await response.json();
+      let result: any = null;
+      try {
+        result = await response.json();
+      } catch {
+        // Non-JSON response (e.g. 502/504 gateway error)
+        console.error("Non-JSON response received from /api/auth/login:", response.status, response.statusText);
+      }
 
-      if (result.success && result.data) {
+      if (result && result.success && result.data) {
         const { token: authToken, user: authUser } = result.data;
         setToken(authToken);
         setUser(authUser);
@@ -61,12 +67,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("efilingg_user", JSON.stringify(authUser));
         toast.success("Welcome back!", "Login Successful");
         return true;
+      } else if (result && result.message) {
+        toast.error(result.message, "Login Failed");
+        return false;
       } else {
-        toast.error(result.message || "Invalid credentials", "Login Failed");
+        toast.error(
+          response.status === 401 
+            ? "Invalid email or password." 
+            : `Server returned status ${response.status} (${response.statusText || "Service unavailable"}).`, 
+          "Login Failed"
+        );
         return false;
       }
-    } catch (err) {
-      toast.error("Could not connect to authentication server.", "Connection Error");
+    } catch (err: any) {
+      console.error("Login network exception:", err);
+      toast.error(err?.message || "Could not connect to authentication server. Please verify network and server status.", "Connection Error");
       return false;
     } finally {
       setIsLoading(false);
@@ -82,17 +97,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
+      let result: any = null;
+      try {
+        result = await response.json();
+      } catch {
+        console.error("Non-JSON response received from /api/auth/register:", response.status, response.statusText);
+      }
 
-      if (result.success) {
+      if (result && result.success) {
         toast.success("Account created successfully. Please login.", "Registration Success");
         return true;
+      } else if (result && result.message) {
+        toast.error(result.message, "Registration Failed");
+        return false;
       } else {
-        toast.error(result.message || "Registration failed", "Failed");
+        toast.error(`Registration failed with status ${response.status}.`, "Registration Failed");
         return false;
       }
-    } catch (err) {
-      toast.error("Could not connect to authentication server.", "Connection Error");
+    } catch (err: any) {
+      console.error("Register network exception:", err);
+      toast.error(err?.message || "Could not connect to authentication server.", "Connection Error");
       return false;
     } finally {
       setIsLoading(false);

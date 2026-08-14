@@ -8,6 +8,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import pg from "pg";
 import path from "path";
 import * as schema from "./schema.js";
+import { seedDatabaseIfEmpty } from "./seed.js";
 
 const { Pool } = pg;
 
@@ -15,12 +16,19 @@ let pool: pg.Pool | null = null;
 let dbInstance: any = null;
 
 // Helper to parse connection config
-export function getConnectionConfig() {
+export function getConnectionConfig(): pg.PoolConfig {
   const dbUrl = process.env.DATABASE_URL;
+  const isSsl = process.env.DB_SSL === "true" ||
+    process.env.PGSSLMODE === "require" ||
+    (typeof dbUrl === "string" && (dbUrl.includes("sslmode=require") || dbUrl.includes("ssl=true")));
+
   if (dbUrl && (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://"))) {
     return {
       connectionString: dbUrl,
-      max: 10,
+      max: 15,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+      ssl: isSsl ? { rejectUnauthorized: false } : undefined,
     };
   }
 
@@ -37,7 +45,10 @@ export function getConnectionConfig() {
     user,
     password,
     database,
-    max: 10,
+    max: 15,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+    ssl: isSsl ? { rejectUnauthorized: false } : undefined,
   };
 }
 
@@ -105,4 +116,6 @@ export async function runMigrations(): Promise<boolean> {
     throw err;
   }
 }
+
+export { seedDatabaseIfEmpty };
 
