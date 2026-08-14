@@ -12,7 +12,7 @@ RUN npm ci
 # Copy the source code
 COPY . .
 
-# Build frontend and backend bundles, and generate database migration files
+# Build frontend and backend bundles
 RUN npm run build
 
 # Stage 2: Production runner stage
@@ -22,6 +22,7 @@ WORKDIR /app
 
 # Set execution environment to production
 ENV NODE_ENV=production
+ENV PORT=3000
 
 # Copy dependency configuration
 COPY package*.json ./
@@ -33,6 +34,7 @@ RUN npm ci --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/database ./database
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/index.html ./index.html
 
 # Ensure local persistence directories exist inside the container filesystem
 RUN mkdir -p public/uploads
@@ -41,4 +43,4 @@ RUN mkdir -p public/uploads
 EXPOSE 3000
 
 # Command to execute the production server
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/server.cjs"]

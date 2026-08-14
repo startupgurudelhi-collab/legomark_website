@@ -55,21 +55,14 @@ async function startServer() {
   // Serve uploaded files statically
   app.use("/uploads", express.static(path.join(process.cwd(), "public/uploads")));
 
-  // Configure Helmet security headers
+  // Configure Helmet security headers (permissive for custom domains, sslip.io HTTP, and preview iframes)
   app.use(
     helmet({
-      frameguard: false, // Disable X-Frame-Options SAMEORIGIN header to allow rendering in AI Studio preview iframe
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-          fontSrc: ["'self'", "https://fonts.gstatic.com"],
-          imgSrc: ["'self'", "data:", "https:*"],
-          connectSrc: ["'self'", "ws:", "wss:"],
-          frameAncestors: ["*"], // Allow embedding in Google AI Studio iframe preview
-        },
-      },
+      frameguard: false, // Allow rendering in AI Studio iframe preview
+      crossOriginEmbedderPolicy: false,
+      crossOriginResourcePolicy: false,
+      crossOriginOpenerPolicy: false,
+      contentSecurityPolicy: false, // Disabled to prevent forced HTTPS upgrades on HTTP deployments (e.g. sslip.io)
     })
   );
 
